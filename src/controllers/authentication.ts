@@ -1,8 +1,11 @@
+import prisma from "../helpers/prisma";
+
 export const authenticationFlow = async (
   scope: string,
   grant_type: string,
   client_assertion_type: string,
   client_assertion: string,
+  clientId: number,
   host: string
 ) => {
   //   validates if client_credentials are valid
@@ -49,6 +52,66 @@ export const authenticationFlow = async (
     scopes[0] === "system"
   ) {
     // fetch public key from the request server
+    const client = await prisma.clients
+      .findUnique({
+        where: {
+          id: clientId,
+        },
+      })
+      .finally(async () => {
+        await prisma.$disconnect;
+      })
+      .catch(() => {});
+
+    if (!client) {
+      return {
+        status: 400,
+        data: {
+          error: "invalid_client",
+        },
+        message: `no client exists with the ${clientId}`,
+      };
+    }
+
+    const clientHost = client.client_host;
+    const clientUrl = new URL(clientHost);
+    const clientPublicKeyEndpoint = new URL(client.client_public_key_endpoint);
+
+    // check if the request originates from the registered client host and if it's the same host that stores the public key
+    if (
+      clientUrl.hostname !== host ||
+      host !== clientPublicKeyEndpoint.hostname
+    ) {
+      console.log(clientUrl.host);
+      console.log(host);
+      return {
+        status: 400,
+        data: {
+          error: "invalid_client",
+          message: `invalid requesting client host ${host}`,
+        },
+      };
+    }
+
+    const getClientPublicKey = await fetch(clientPublicKeyEndpoint);
+    if (getClientPublicKey.status !== 200) {
+      return {
+        status: 400,
+        data: {
+          error: "invalid_client",
+          message: `client public key cannot be obtained`,
+        },
+      };
+    }
+
+    const clientPublicKey = await getClientPublicKey.text();
+    return {
+      status: 200,
+      data: {
+        data: clientPublicKey,
+      },
+      message: "matched",
+    };
   } else {
     return {
       status: 400,
@@ -58,12 +121,4 @@ export const authenticationFlow = async (
       message: "the supported scopes are patient | user | system",
     };
   }
-
-  return {
-    status: 200,
-    data: {
-      data: host,
-    },
-    message: "matched",
-  };
 };
