@@ -10,10 +10,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model users {
+  id        BigInt    @id @unique @default(autoincrement())
+  email     String    @unique
+  name      String
+  password  String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now())
+  clients   clients[]
+}
+
 model clients {
-  id BigInt @id @default(autoincrement())
-  client_name String
-  client_id String @default(uuid())
-  client_host String
-  client_public_key String
-} 
+  id                         BigInt   @id @default(autoincrement())
+  client_name                String
+  client_id                  String   @unique @default(uuid())
+  client_host                String
+  client_public_key_endpoint String
+  created_at                  DateTime @default(now())
+  updated_at                  DateTime @default(now())
+  users                      users?   @relation(fields: [users_id], references: [id])
+  users_id                    BigInt?
+}
