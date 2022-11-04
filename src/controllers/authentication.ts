@@ -1,5 +1,3 @@
-import * as jose from "jose";
-
 export const authenticationFlow = async (
   scope: string,
   grant_type: string,
