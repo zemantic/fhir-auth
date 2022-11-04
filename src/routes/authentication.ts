@@ -9,12 +9,14 @@ route.post("/oauth/access_token", async (req, res, next) => {
   const client_assertion_type: string = req.body.client_assertion_type;
   const client_assertion: string = req.body.client_assertion;
   const host: string = req.hostname;
+  const clientId: number = Number(req.body.client_id);
 
   const request = await authenticationFlow(
     scope,
     grant_type,
     client_assertion_type,
     client_assertion,
+    clientId,
     host
   );
 
