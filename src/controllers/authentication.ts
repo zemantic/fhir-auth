@@ -1,4 +1,6 @@
+import { authenticate } from "../auth/authentication";
 import prisma from "../helpers/prisma";
+import fetch from "node-fetch";
 
 export const authenticationFlow = async (
   scope: string,
@@ -75,12 +77,11 @@ export const authenticationFlow = async (
 
     const clientHost = client.client_host;
     const clientUrl = new URL(clientHost);
-    const clientPublicKeyEndpoint = new URL(client.client_public_key_endpoint);
 
     // check if the request originates from the registered client host and if it's the same host that stores the public key
     if (
       clientUrl.hostname !== host ||
-      host !== clientPublicKeyEndpoint.hostname
+      host !== new URL(client.client_public_key_endpoint).hostname
     ) {
       console.log(clientUrl.host);
       console.log(host);
@@ -93,7 +94,7 @@ export const authenticationFlow = async (
       };
     }
 
-    const getClientPublicKey = await fetch(clientPublicKeyEndpoint);
+    const getClientPublicKey = await fetch(client.client_public_key_endpoint);
     if (getClientPublicKey.status !== 200) {
       return {
         status: 400,
@@ -105,10 +106,26 @@ export const authenticationFlow = async (
     }
 
     const clientPublicKey = await getClientPublicKey.text();
+    const authVerify = await authenticate(
+      JSON.parse(clientPublicKey),
+      client_assertion,
+      client.client_public_key_endpoint
+    );
+
+    if (authVerify.status !== 200) {
+      return {
+        status: 400,
+        data: {
+          error: "invalid_client",
+        },
+        message: authVerify.message,
+      };
+    }
+
     return {
       status: 200,
       data: {
-        data: clientPublicKey,
+        data: authVerify,
       },
       message: "matched",
     };
