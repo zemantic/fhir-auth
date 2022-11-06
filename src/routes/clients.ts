@@ -22,7 +22,7 @@ route.get("/client/:id", async (req, res, next) => {
   const id: string = req.params.id;
   const request = await getClientById(Number(id));
 
-  return res.status(request.status).json(Number(request.data?.client.id));
+  return res.status(request.status).json(request.data?.client?.client_id);
 });
 
 export { route as clientRoutes };
