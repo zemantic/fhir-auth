@@ -1,0 +1,10 @@
+{
+  "crv": "P-256",
+  "key_ops": ["verify"],
+  "kty": "EC",
+  "x": "M4nKXiRZD4aVemVLHtiO2mJSSGbu5wgMHO0Ingjj5Ag",
+  "y": "gCGhJXcOAjoIUmN_TBTDcpFTA7kicyFdRrqo9VQ52Bs",
+  "alg": "ES256",
+  "use": "sig",
+  "kid": "f75a62b5f3715342b9fc7baf67e2d218"
+}
