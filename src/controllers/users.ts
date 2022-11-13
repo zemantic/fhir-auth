@@ -1,5 +1,6 @@
 import prisma from "../helpers/prisma";
 import bcrypt from "bcrypt";
+import { ResponseClass } from "../helpers/responseClass";
 
 /**
  * user class
@@ -92,7 +93,7 @@ export const getUserById = async (id: number) => {
       await prisma.$disconnect();
     });
 
-  const responseObject = new ResposneClass();
+  const responseObject = new ResponseClass();
 
   if (getUser instanceof Error) {
     responseObject.status = 500;
@@ -129,7 +130,7 @@ export const getUserByEmail = async (email: string) => {
       await prisma.$disconnect();
     });
 
-  const responseObject = new ResposneClass();
+  const responseObject = new ResponseClass();
 
   if (getUser instanceof Error) {
     responseObject.status = 500;
