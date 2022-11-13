@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/zemantic/FHIR-auth-server#readme",
   "dependencies": {
+    "bcrypt": "^5.1.0",
     "@prisma/client": "^4.6.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

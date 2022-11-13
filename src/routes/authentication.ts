@@ -1,8 +1,10 @@
 import { Router } from "express";
+import { authenticateUser } from "../auth/user";
 import { authenticationFlow } from "../controllers/authentication";
 
 const route = Router();
 
+// fhir application authentication route
 route.post("/oauth/access_token", async (req, res, next) => {
   const scope: string = req.body.scope;
   const grant_type: string = req.body.grant_type;
@@ -20,6 +22,14 @@ route.post("/oauth/access_token", async (req, res, next) => {
     host
   );
 
+  return res.status(request.status).json(request);
+});
+
+// user authentication route
+route.post("/users/authenticate", async (req, res) => {
+  const email: string = req.body.email;
+  const password: string = req.body.password;
+  const request = await authenticateUser(email, password);
   return res.status(request.status).json(request);
 });
 

@@ -4,5 +4,6 @@ require("esbuild")
     bundle: true,
     platform: "node",
     outfile: "./dist/server.js",
+    external: ["bcrypt"],
   })
   .catch(() => process.exit(1));

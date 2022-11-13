@@ -17,7 +17,8 @@ model users {
   password   String
   created_at DateTime  @default(now())
   updated_at DateTime  @default(now())
-  clients    clients[]
+  is_active Boolean @default(true)
+  clients   clients[]
 }
 
 model clients {
