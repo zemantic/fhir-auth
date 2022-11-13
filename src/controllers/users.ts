@@ -32,7 +32,10 @@ export const createUser = async (
   email: string,
   password: string
 ) => {
-  const hashPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS);
+  const hashPassword = await bcrypt.hash(
+    password,
+    Number(process.env.SALT_ROUNDS)
+  );
 
   const newUser = await prisma.users
     .create({
