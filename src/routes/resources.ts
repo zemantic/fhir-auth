@@ -8,3 +8,5 @@ routes.get("/resources/:fhirVersion", async (req, res) => {
   const request = await readResources(fhirVersion);
   return res.status(request.status).json(request);
 });
+
+export { routes as resourceRoutes };
