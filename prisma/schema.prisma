@@ -11,10 +11,10 @@ datasource db {
 }
 
 model users {
-  id        BigInt    @id @unique @default(autoincrement())
-  email     String    @unique
-  name      String
-  password  String
+  id         BigInt    @id @unique @default(autoincrement())
+  email      String    @unique
+  name       String
+  password   String
   created_at DateTime  @default(now())
   updated_at DateTime  @default(now())
   is_active Boolean @default(true)
@@ -22,13 +22,35 @@ model users {
 }
 
 model clients {
-  id                         BigInt   @id @default(autoincrement())
+  id                         BigInt             @id @default(autoincrement())
   client_name                String
-  client_id                  String   @unique @default(uuid())
+  client_id                  String             @unique @default(uuid())
   client_host                String
   client_public_key_endpoint String
-  created_at                  DateTime @default(now())
-  updated_at                  DateTime @default(now())
-  users                      users?   @relation(fields: [users_id], references: [id])
-  users_id                    BigInt?
+  created_at                 DateTime           @default(now())
+  updated_at                 DateTime           @default(now())
+  users                      users?             @relation(fields: [users_id], references: [id])
+  users_id                   BigInt?
+  clientPrivilages           clientPrivilages[]
+}
+
+model clientPrivilages {
+  id          BigInt    @unique @default(autoincrement())
+  client      clients   @relation(fields: [clientsId], references: [id])
+  resource    resources @relation(fields: [resourcesId], references: [id])
+  create      Boolean
+  read        Boolean
+  update      Boolean
+  delete      Boolean
+  search      Boolean
+  clientsId   BigInt
+  resourcesId BigInt
+}
+
+model resources {
+  id               BigInt             @unique @default(autoincrement())
+  resource_name    String
+  fhir_version     Decimal
+  is_active        Boolean
+  clientPrivilages clientPrivilages[]
 }

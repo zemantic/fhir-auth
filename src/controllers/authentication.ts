@@ -1,4 +1,6 @@
+import { authenticate } from "../auth/authentication";
 import prisma from "../helpers/prisma";
+import fetch from "node-fetch";
 
 export const authenticationFlow = async (
   scope: string,
@@ -33,24 +35,11 @@ export const authenticationFlow = async (
     };
   }
 
-  // Alternative syntax using RegExp constructor
-  //   const regex = /patient|system|user|\/([A-z]*?)\.(.*)\?(.*)/gm;
-
-  const regex = new RegExp(
-    "(patient|system|user)\\/([A-z]*?)\\.(.*)\\?(.*)",
-    "gm"
-  );
-
-  // divide scopes into iterables
-  const scopes = scope.split(regex).filter((c) => c !== "");
-
+  const privileges = await parseScopes(scope);
+  // const checkPrivilages = await validatedPrivilages(privileges);
+  //
   // check if scope meet SMART requirements
-  // TODO: Dynamically get scopes from the database
-  if (
-    scopes[0] === "patient" ||
-    scopes[0] === "user" ||
-    scopes[0] === "system"
-  ) {
+  if (privileges?.status === 200) {
     // fetch public key from the request server
     const client = await prisma.clients
       .findUnique({
@@ -75,12 +64,11 @@ export const authenticationFlow = async (
 
     const clientHost = client.client_host;
     const clientUrl = new URL(clientHost);
-    const clientPublicKeyEndpoint = new URL(client.client_public_key_endpoint);
 
     // check if the request originates from the registered client host and if it's the same host that stores the public key
     if (
       clientUrl.hostname !== host ||
-      host !== clientPublicKeyEndpoint.hostname
+      host !== new URL(client.client_public_key_endpoint).hostname
     ) {
       console.log(clientUrl.host);
       console.log(host);
@@ -93,7 +81,7 @@ export const authenticationFlow = async (
       };
     }
 
-    const getClientPublicKey = await fetch(clientPublicKeyEndpoint);
+    const getClientPublicKey = await fetch(client.client_public_key_endpoint);
     if (getClientPublicKey.status !== 200) {
       return {
         status: 400,
@@ -105,10 +93,26 @@ export const authenticationFlow = async (
     }
 
     const clientPublicKey = await getClientPublicKey.text();
+    const authVerify = await authenticate(
+      JSON.parse(clientPublicKey),
+      client_assertion,
+      client.client_public_key_endpoint
+    );
+
+    if (authVerify.status !== 200) {
+      return {
+        status: 400,
+        data: {
+          error: "invalid_client",
+        },
+        message: authVerify.message,
+      };
+    }
+
     return {
       status: 200,
       data: {
-        data: clientPublicKey,
+        data: authVerify,
       },
       message: "matched",
     };
@@ -122,3 +126,49 @@ export const authenticationFlow = async (
     };
   }
 };
+
+const parseScopes = async (scopes: string) => {
+  if (scopes.trim().length === 0) {
+    return {
+      status: 401,
+      data: null,
+      message: "empty scopes",
+    };
+  }
+
+  const splitScopes: string[] = scopes.split(" ");
+
+  // Alternative syntax using RegExp constructor
+  //   const regex = /patient|system|user|\/([A-z]*?)\.(.*)\?(.*)/gm;
+
+  const regex = new RegExp(
+    "(patient|system|user)\\/([A-z]*?)\\.(.*)\\?(.*)",
+    "gm"
+  );
+
+  const outputScopes: Array<{ resource: string; operation: string }> = [];
+  for (let index = 0; index < splitScopes.length; index++) {
+    const scope = splitScopes[index];
+    const subScopes = scope.split(regex).filter((c) => c !== "");
+    // TODO: Dynamically get scopes from the database
+    if (
+      subScopes[0] === "system" ||
+      subScopes[0] === "user" ||
+      subScopes[0] === "patient"
+    ) {
+      return {
+        status: 200,
+      };
+    } else {
+      return {
+        status: 403,
+        message: "invalid scope",
+        data: null,
+      };
+    }
+  }
+};
+
+const validatedPrivilages = async (
+  privileges: Array<{ resouce: string; privilage: string }>
+) => {};

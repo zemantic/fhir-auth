@@ -1,10 +1,22 @@
 import prisma from "../helpers/prisma";
+import { ResponseClass } from "../helpers/responseClass";
 
 export const createClient = async (
   clientName: string,
   clientHost: string,
   clientPublicKeyEndpoint: string,
-  userId: number
+  userId: number,
+  privilages: Array<{
+    resource: string;
+    resourcesId: number;
+    privilages: {
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+      search: boolean;
+    };
+  }>
 ) => {
   const newClient = await prisma.clients
     .create({
@@ -22,21 +34,91 @@ export const createClient = async (
       await prisma.$disconnect();
     });
 
-  return {
-    status: 200,
-    message: "new client created",
-    data: {
-      client: {
-        id: Number(newClient.id),
-        clientId: newClient.client_id,
-        clientName: newClient.client_name,
-        clientHost: newClient.client_host,
-        clientPublicKeyEndpoint: newClient.client_public_key_endpoint,
-        createdAt: newClient.created_at,
-        createdBy: Number(newClient.users_id),
-      },
+  const responseObject = new ResponseClass();
+
+  if (newClient instanceof Error) {
+    responseObject.data = newClient;
+    responseObject.message = `error creating new client`;
+    responseObject.status = 500;
+    return responseObject;
+  }
+
+  const parsePrivilages: Array<{
+    resourcesId: bigint;
+    create: boolean;
+    read: boolean;
+    update: boolean;
+    delete: boolean;
+    search: boolean;
+    clientsId: bigint;
+  }> = [];
+
+  privilages.forEach((privilage) => {
+    let tempPrivilage: {
+      resourcesId: bigint;
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+      search: boolean;
+      clientsId: bigint;
+    } = {
+      resourcesId: BigInt(0),
+      create: false,
+      read: false,
+      update: false,
+      delete: false,
+      search: false,
+      clientsId: BigInt(0),
+    };
+
+    tempPrivilage.create = privilage.privilages.create;
+    tempPrivilage.read = privilage.privilages.read;
+    tempPrivilage.update = privilage.privilages.update;
+    tempPrivilage.delete = privilage.privilages.delete;
+    tempPrivilage.search = privilage.privilages.search;
+    tempPrivilage.clientsId = newClient.id;
+    tempPrivilage.resourcesId = BigInt(privilage.resourcesId);
+
+    parsePrivilages.push(tempPrivilage);
+  });
+
+  console.log(privilages);
+  console.log(parsePrivilages);
+
+  const createPrivilages = await prisma.clientPrivilages
+    .createMany({
+      data: parsePrivilages,
+    })
+    .catch((e) => {
+      return new Error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+
+  if (createPrivilages instanceof Error) {
+    responseObject.status = 500;
+    responseObject.data = createPrivilages;
+    responseObject.message = `error creating resource privilages`;
+    return responseObject;
+  }
+
+  responseObject.status = 200;
+  responseObject.data = {
+    client: {
+      id: Number(newClient.id),
+      clientId: newClient.client_id,
+      clientName: newClient.client_name,
+      clientHost: newClient.client_host,
+      clientPublicKeyEndpoint: newClient.client_public_key_endpoint,
+      createdAt: newClient.created_at,
+      createdBy: Number(newClient.users_id),
     },
+    privilages: privilages,
   };
+  responseObject.message = "new client created";
+  return responseObject;
 };
 
 export const readClient = async () => {};
