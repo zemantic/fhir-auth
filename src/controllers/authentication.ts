@@ -35,24 +35,11 @@ export const authenticationFlow = async (
     };
   }
 
-  // Alternative syntax using RegExp constructor
-  //   const regex = /patient|system|user|\/([A-z]*?)\.(.*)\?(.*)/gm;
-
-  const regex = new RegExp(
-    "(patient|system|user)\\/([A-z]*?)\\.(.*)\\?(.*)",
-    "gm"
-  );
-
-  // divide scopes into iterables
-  const scopes = scope.split(regex).filter((c) => c !== "");
-
+  const privileges = await parseScopes(scope);
+  // const checkPrivilages = await validatedPrivilages(privileges);
+  //
   // check if scope meet SMART requirements
-  // TODO: Dynamically get scopes from the database
-  if (
-    scopes[0] === "patient" ||
-    scopes[0] === "user" ||
-    scopes[0] === "system"
-  ) {
+  if (privileges?.status === 200) {
     // fetch public key from the request server
     const client = await prisma.clients
       .findUnique({
@@ -139,3 +126,49 @@ export const authenticationFlow = async (
     };
   }
 };
+
+const parseScopes = async (scopes: string) => {
+  if (scopes.trim().length === 0) {
+    return {
+      status: 401,
+      data: null,
+      message: "empty scopes",
+    };
+  }
+
+  const splitScopes: string[] = scopes.split(" ");
+
+  // Alternative syntax using RegExp constructor
+  //   const regex = /patient|system|user|\/([A-z]*?)\.(.*)\?(.*)/gm;
+
+  const regex = new RegExp(
+    "(patient|system|user)\\/([A-z]*?)\\.(.*)\\?(.*)",
+    "gm"
+  );
+
+  const outputScopes: Array<{ resource: string; operation: string }> = [];
+  for (let index = 0; index < splitScopes.length; index++) {
+    const scope = splitScopes[index];
+    const subScopes = scope.split(regex).filter((c) => c !== "");
+    // TODO: Dynamically get scopes from the database
+    if (
+      subScopes[0] === "system" ||
+      subScopes[0] === "user" ||
+      subScopes[0] === "patient"
+    ) {
+      return {
+        status: 200,
+      };
+    } else {
+      return {
+        status: 403,
+        message: "invalid scope",
+        data: null,
+      };
+    }
+  }
+};
+
+const validatedPrivilages = async (
+  privileges: Array<{ resouce: string; privilage: string }>
+) => {};

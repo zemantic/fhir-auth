@@ -7,13 +7,15 @@ route.post("/client", async (req, res, next) => {
   const clientName: string = req.body.clientName;
   const clientHost: string = req.body.clientHost;
   const clientPublicKeyEndpoint: string = req.body.clientPublicKeyEndpoint;
+  const privilages = req.body.privilages;
   const userId = 1;
 
   const request = await createClient(
     clientName,
     clientHost,
     clientPublicKeyEndpoint,
-    userId
+    userId,
+    privilages
   );
   return res.status(request.status).json(request);
 });
