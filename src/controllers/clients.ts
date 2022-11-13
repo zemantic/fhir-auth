@@ -7,12 +7,15 @@ export const createClient = async (
   clientPublicKeyEndpoint: string,
   userId: number,
   privilages: Array<{
+    resource: string;
     resourcesId: number;
-    create: boolean;
-    read: boolean;
-    update: boolean;
-    delete: boolean;
-    search: boolean;
+    privilages: {
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+      search: boolean;
+    };
   }>
 ) => {
   const newClient = await prisma.clients
@@ -69,15 +72,19 @@ export const createClient = async (
       clientsId: BigInt(0),
     };
 
-    tempPrivilage.create = privilage.create;
-    tempPrivilage.read = privilage.read;
-    tempPrivilage.update = privilage.update;
-    tempPrivilage.delete = privilage.delete;
-    tempPrivilage.search = privilage.search;
+    tempPrivilage.create = privilage.privilages.create;
+    tempPrivilage.read = privilage.privilages.read;
+    tempPrivilage.update = privilage.privilages.update;
+    tempPrivilage.delete = privilage.privilages.delete;
+    tempPrivilage.search = privilage.privilages.search;
     tempPrivilage.clientsId = newClient.id;
+    tempPrivilage.resourcesId = BigInt(privilage.resourcesId);
 
     parsePrivilages.push(tempPrivilage);
   });
+
+  console.log(privilages);
+  console.log(parsePrivilages);
 
   const createPrivilages = await prisma.clientPrivilages
     .createMany({
