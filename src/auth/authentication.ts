@@ -94,7 +94,7 @@ export const authenticate = async (
       if (!client) {
         return {
           status: 403,
-          message: "invalid client id",
+          message: "invalid client_id",
           data: null,
         };
       }
@@ -132,7 +132,12 @@ export const authenticate = async (
       if (authorizedScopes.length === 0) {
         const responseObject = new ResponseClass();
         responseObject.status = 403;
-        responseObject.data = null;
+        responseObject.data = {
+          // TODO: Add error URI from database or fixed value
+          error_uri: "",
+          error_description:
+            "the requested authorization scopes are not authorizable",
+        };
         responseObject.message = `requested authorization scopes are not authorizable`;
         return responseObject;
       }
