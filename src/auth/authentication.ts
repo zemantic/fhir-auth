@@ -74,7 +74,7 @@ export const authenticate = async (
       (protectedHeader.alg.toUpperCase() === "RS384" ||
         protectedHeader.alg.toUpperCase() === "ES384") &&
       (String(publicKey.kty).toUpperCase() === "RSA" ||
-        String(publicKey.kty).toUpperCase() === "ES")
+        String(publicKey.kty).toUpperCase() === "EC")
     ) {
       const client = await prisma.clients
         .findUnique({
