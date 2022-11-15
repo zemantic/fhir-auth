@@ -7,7 +7,7 @@ export const authenticationFlow = async (
   grant_type: string,
   client_assertion_type: string,
   client_assertion: string,
-  clientId: number,
+  clientId: string,
   host: string
 ) => {
   //   validates if client_credentials are valid
@@ -44,7 +44,7 @@ export const authenticationFlow = async (
     const client = await prisma.clients
       .findUnique({
         where: {
-          id: clientId,
+          client_id: clientId,
         },
       })
       .finally(async () => {
