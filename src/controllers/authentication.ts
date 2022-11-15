@@ -14,7 +14,7 @@ export const authenticationFlow = async (
   //   validates if client_credentials are valid
   if (grant_type !== "client_credentials") {
     return {
-      status: 400,
+      status: 401,
       data: {
         error: "invalid_client",
       },
@@ -28,7 +28,7 @@ export const authenticationFlow = async (
     "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
   ) {
     return {
-      status: 400,
+      status: 401,
       data: {
         error: "invalid_client",
       },
@@ -52,7 +52,7 @@ export const authenticationFlow = async (
 
   if (client instanceof Error) {
     const responseObject = new ResponseClass();
-    responseObject.status = 400;
+    responseObject.status = 401;
     responseObject.message = "invalid_client";
     responseObject.data = null;
     return responseObject;
@@ -60,7 +60,7 @@ export const authenticationFlow = async (
 
   if (!client) {
     return {
-      status: 400,
+      status: 401,
       data: {
         error: "invalid_client",
       },
@@ -77,7 +77,7 @@ export const authenticationFlow = async (
     host !== new URL(client.client_public_key_endpoint).hostname
   ) {
     return {
-      status: 400,
+      status: 401,
       data: {
         error: "invalid_client",
         message: `invalid requesting client host ${host}`,
@@ -90,7 +90,7 @@ export const authenticationFlow = async (
 
   if (parsedScopes.length === 0) {
     const responseObject = new ResponseClass();
-    responseObject.status = 400;
+    responseObject.status = 401;
     responseObject.data = {
       error: "invalid_scopes",
     };
@@ -102,7 +102,7 @@ export const authenticationFlow = async (
 
   if (getClientPublicKey.status !== 200) {
     return {
-      status: 400,
+      status: 401,
       data: {
         error: "invalid_client",
         message: `client public key cannot be obtained`,
@@ -120,7 +120,7 @@ export const authenticationFlow = async (
 
   if (authVerify.status !== 200) {
     return {
-      status: 400,
+      status: 401,
       data: {
         error: "invalid_client",
       },
