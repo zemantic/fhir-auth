@@ -1,6 +1,7 @@
 import { authenticate } from "../auth/authentication";
 import prisma from "../helpers/prisma";
 import fetch from "node-fetch";
+import { ResponseClass } from "../helpers/responseClass";
 
 export const authenticationFlow = async (
   scope: string,
@@ -35,105 +36,110 @@ export const authenticationFlow = async (
     };
   }
 
-  const privileges = await parseScopes(scope);
-  // const checkPrivilages = await validatedPrivilages(privileges);
-  //
-  // check if scope meet SMART requirements
-  if (privileges?.status === 200) {
-    // fetch public key from the request server
-    const client = await prisma.clients
-      .findUnique({
-        where: {
-          id: clientId,
-        },
-      })
-      .finally(async () => {
-        await prisma.$disconnect;
-      })
-      .catch(() => {});
-
-    if (!client) {
-      return {
-        status: 400,
-        data: {
-          error: "invalid_client",
-        },
-        message: `no client exists with the ${clientId}`,
-      };
-    }
-
-    const clientHost = client.client_host;
-    const clientUrl = new URL(clientHost);
-
-    // check if the request originates from the registered client host and if it's the same host that stores the public key
-    if (
-      clientUrl.hostname !== host ||
-      host !== new URL(client.client_public_key_endpoint).hostname
-    ) {
-      console.log(clientUrl.host);
-      console.log(host);
-      return {
-        status: 400,
-        data: {
-          error: "invalid_client",
-          message: `invalid requesting client host ${host}`,
-        },
-      };
-    }
-
-    const getClientPublicKey = await fetch(client.client_public_key_endpoint);
-    if (getClientPublicKey.status !== 200) {
-      return {
-        status: 400,
-        data: {
-          error: "invalid_client",
-          message: `client public key cannot be obtained`,
-        },
-      };
-    }
-
-    const clientPublicKey = await getClientPublicKey.text();
-    const authVerify = await authenticate(
-      JSON.parse(clientPublicKey),
-      client_assertion,
-      client.client_public_key_endpoint
-    );
-
-    if (authVerify.status !== 200) {
-      return {
-        status: 400,
-        data: {
-          error: "invalid_client",
-        },
-        message: authVerify.message,
-      };
-    }
-
-    return {
-      status: 200,
-      data: {
-        data: authVerify,
+  // fetch public key from the request server
+  const client = await prisma.clients
+    .findUnique({
+      where: {
+        id: clientId,
       },
-      message: "matched",
-    };
-  } else {
+    })
+    .finally(async () => {
+      await prisma.$disconnect;
+    })
+    .catch((e) => {
+      return new Error(e);
+    });
+
+  if (client instanceof Error) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 400;
+    responseObject.message = "invalid_client";
+    responseObject.data = null;
+    return responseObject;
+  }
+
+  if (!client) {
     return {
       status: 400,
       data: {
         error: "invalid_client",
       },
-      message: "the supported scopes are patient | user | system",
+      message: `no client exists with the ${clientId}`,
     };
   }
+
+  const clientHost = client.client_host;
+  const clientUrl = new URL(clientHost);
+
+  // check if the request originates from the registered client host and if it's the same host that stores the public key
+  if (
+    clientUrl.hostname !== host ||
+    host !== new URL(client.client_public_key_endpoint).hostname
+  ) {
+    return {
+      status: 400,
+      data: {
+        error: "invalid_client",
+        message: `invalid requesting client host ${host}`,
+      },
+    };
+  }
+
+  // check if the scopes are in SMART format
+  const parsedScopes = await parseScopes(scope);
+
+  if (parsedScopes.length === 0) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 400;
+    responseObject.data = {
+      error: "invalid_scopes",
+    };
+    responseObject.message = `invalid scopes provided, the supported scopes are patient | user | system`;
+    return responseObject;
+  }
+
+  const getClientPublicKey = await fetch(client.client_public_key_endpoint);
+
+  if (getClientPublicKey.status !== 200) {
+    return {
+      status: 400,
+      data: {
+        error: "invalid_client",
+        message: `client public key cannot be obtained`,
+      },
+    };
+  }
+
+  const clientPublicKey = await getClientPublicKey.text();
+  const authVerify = await authenticate(
+    JSON.parse(clientPublicKey),
+    client_assertion,
+    client.client_public_key_endpoint,
+    parsedScopes
+  );
+
+  if (authVerify.status !== 200) {
+    return {
+      status: 400,
+      data: {
+        error: "invalid_client",
+      },
+      message: authVerify.message,
+    };
+  }
+
+  return {
+    status: 200,
+    data: {
+      data: authVerify,
+    },
+    message: "matched",
+  };
 };
 
 const parseScopes = async (scopes: string) => {
   if (scopes.trim().length === 0) {
-    return {
-      status: 401,
-      data: null,
-      message: "empty scopes",
-    };
+    return [];
   }
 
   const splitScopes: string[] = scopes.split(" ");
@@ -146,7 +152,7 @@ const parseScopes = async (scopes: string) => {
     "gm"
   );
 
-  const outputScopes: Array<{ resource: string; operation: string }> = [];
+  const outputScopes: Array<{ resource: string; operations: string[] }> = [];
   for (let index = 0; index < splitScopes.length; index++) {
     const scope = splitScopes[index];
     const subScopes = scope.split(regex).filter((c) => c !== "");
@@ -156,19 +162,17 @@ const parseScopes = async (scopes: string) => {
       subScopes[0] === "user" ||
       subScopes[0] === "patient"
     ) {
-      return {
-        status: 200,
-      };
+      if (subScopes[1] && subScopes[2]) {
+        let tempPrivilage = {
+          resource: subScopes[1],
+          operations: subScopes[2].split(""),
+        };
+        outputScopes.push(tempPrivilage);
+      }
     } else {
-      return {
-        status: 403,
-        message: "invalid scope",
-        data: null,
-      };
+      return [];
     }
   }
-};
 
-const validatedPrivilages = async (
-  privileges: Array<{ resouce: string; privilage: string }>
-) => {};
+  return outputScopes;
+};
