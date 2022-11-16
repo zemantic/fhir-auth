@@ -17,21 +17,21 @@ model users {
   password   String
   created_at DateTime  @default(now())
   updated_at DateTime  @default(now())
-  is_active Boolean @default(true)
-  clients   clients[]
+  is_active  Boolean   @default(true)
+  clients    clients[]
 }
 
 model clients {
-  id                         BigInt             @id @default(autoincrement())
-  client_name                String
-  client_id                  String             @unique @default(uuid())
-  client_host                String
-  client_public_key_endpoint String
-  created_at                 DateTime           @default(now())
-  updated_at                 DateTime           @default(now())
-  users                      users?             @relation(fields: [users_id], references: [id])
-  users_id                   BigInt?
-  clientPrivilages           clientPrivilages[]
+  id                      BigInt             @id @default(autoincrement())
+  clientName              String
+  clientId                String             @unique @default(uuid())
+  clientHost              String
+  clientPublicKeyEndpoint String
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @default(now())
+  users                   users?             @relation(fields: [usersId], references: [id])
+  usersId                 BigInt?
+  clientPrivilages        clientPrivilages[]
 }
 
 model clientPrivilages {
@@ -49,8 +49,8 @@ model clientPrivilages {
 
 model resources {
   id               BigInt             @unique @default(autoincrement())
-  resource_name    String
-  fhir_version     Decimal
-  is_active        Boolean
+  resourceName     String
+  fhirVersion      Decimal
+  isActive         Boolean
   clientPrivilages clientPrivilages[]
 }
