@@ -83,9 +83,6 @@ export const createClient = async (
     parsePrivilages.push(tempPrivilage);
   });
 
-  console.log(privilages);
-  console.log(parsePrivilages);
-
   const createPrivilages = await prisma.clientPrivilages
     .createMany({
       data: parsePrivilages,

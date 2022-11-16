@@ -177,7 +177,6 @@ export const authenticate = async (
       return responseObject;
     }
   } catch (error) {
-    console.log(error);
     if (error.code === "ERR_JWT_EXPIRED") {
       const responseObject = new ResponseClass();
       responseObject.status = 401;
