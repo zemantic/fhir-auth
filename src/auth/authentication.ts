@@ -173,7 +173,7 @@ export const authenticate = async (
       return responseObject;
     } else {
       return {
-        status: 403,
+        status: 401,
         message: "invalid algoritm only RS384 or ES384 supported",
         data: null,
       };
@@ -181,7 +181,7 @@ export const authenticate = async (
   } catch (error) {
     if (error.code === "ERR_JWT_EXPIRED") {
       return {
-        status: 403,
+        status: 401,
         data: null,
         message: "jwt expired",
       };
