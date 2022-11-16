@@ -1,11 +1,44 @@
 import prisma from "../helpers/prisma";
 import { ResponseClass } from "../helpers/responseClass";
 
+class ClientClass {
+  private _map: Map<string, any>;
+  public get map(): Map<string, any> {
+    return this._map;
+  }
+  public set map(value: Map<string, any>) {
+    this._map = value;
+  }
+
+  constructor(params) {
+    const map: Map<string, any> = new Map(Object.entries(params));
+    map.set("id", Number(map.get("id")));
+    map.set("usersId", Number(map.get("usersId")));
+    this.map = map;
+
+    const privilages: Array<any> = this.map.get("clientPrivilages");
+    for (let index = 0; index < privilages.length; index++) {
+      const privilage = privilages[index];
+      privilage.id = Number(privilage.id);
+      privilage.resource.id = Number(privilage.resource.id);
+      privilage.resourcesId = Number(privilage.resourcesId);
+      privilage.clientsId = Number(privilage.clientsId);
+      privilages[index] = privilage;
+    }
+    map.set("clientPrivilages", privilages);
+  }
+
+  toJSON() {
+    const map = this.map;
+    return Object.fromEntries(map);
+  }
+}
+
 export const createClient = async (
   clientName: string,
   clientHost: string,
   clientPublicKeyEndpoint: string,
-  userId: number,
+  usersId: number,
   privilages: Array<{
     resource: string;
     resourcesId: number;
@@ -21,10 +54,10 @@ export const createClient = async (
   const newClient = await prisma.clients
     .create({
       data: {
-        client_name: clientName,
-        client_host: clientHost,
-        client_public_key_endpoint: clientPublicKeyEndpoint,
-        users_id: userId,
+        clientName,
+        clientHost,
+        clientPublicKeyEndpoint,
+        usersId,
       },
     })
     .catch((e) => {
@@ -105,12 +138,12 @@ export const createClient = async (
   responseObject.data = {
     client: {
       id: Number(newClient.id),
-      clientId: newClient.client_id,
-      clientName: newClient.client_name,
-      clientHost: newClient.client_host,
-      clientPublicKeyEndpoint: newClient.client_public_key_endpoint,
-      createdAt: newClient.created_at,
-      createdBy: Number(newClient.users_id),
+      clientId: newClient.clientId,
+      clientName: newClient.clientName,
+      clientHost: newClient.clientHost,
+      clientPublicKeyEndpoint: newClient.clientPublicKeyEndpoint,
+      createdAt: newClient.createdAt,
+      createdBy: Number(newClient.usersId),
     },
     privilages: privilages,
   };
@@ -118,7 +151,59 @@ export const createClient = async (
   return responseObject;
 };
 
-export const readClient = async () => {};
+export const readClient = async (clientId: string) => {
+  const client = await prisma.clients
+    .findUnique({
+      where: {
+        clientId,
+      },
+      include: {
+        clientPrivilages: {
+          include: {
+            resource: {
+              select: {
+                resourceName: true,
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    })
+    .catch((e) => {
+      return new Error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+
+  const responseObject = new ResponseClass();
+
+  if (client instanceof Error) {
+    responseObject.status = 500;
+    responseObject.message = `an unexpected error occred in retrieving client: ${client.message}`;
+    responseObject.data = {
+      error: client,
+    };
+    return responseObject;
+  }
+
+  if (client === null) {
+    responseObject.status = 404;
+    responseObject.message = `no client found for client_id ${clientId}`;
+    responseObject.data = {
+      client: null,
+    };
+    return responseObject;
+  }
+
+  responseObject.status = 200;
+  responseObject.data = {
+    client: new ClientClass(client),
+  };
+  responseObject.message = `client found for client_id ${clientId}`;
+  return responseObject;
+};
 
 export const updateClient = async () => {};
 
@@ -165,7 +250,7 @@ export const getClientByClientId = async (clientId: string) => {
   const client = await prisma.clients
     .findUnique({
       where: {
-        client_id: clientId,
+        clientId,
       },
     })
     .catch((e) => {

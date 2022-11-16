@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { createClient, getClientById } from "../controllers/clients";
+import {
+  createClient,
+  getClientById,
+  readClient,
+} from "../controllers/clients";
 
 const route = Router();
 
@@ -22,9 +26,9 @@ route.post("/client", async (req, res, next) => {
 
 route.get("/client/:id", async (req, res, next) => {
   const id: string = req.params.id;
-  const request = await getClientById(Number(id));
+  const request = await readClient(id);
 
-  return res.status(request.status).json(request.data?.client?.client_id);
+  return res.status(request.status).json(request);
 });
 
 export { route as clientRoutes };
