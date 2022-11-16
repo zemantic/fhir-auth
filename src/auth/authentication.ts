@@ -8,66 +8,66 @@ export const authenticate = async (
   jku: string,
   scopes: Array<{ resource: string; operations: string[] }>
 ) => {
-  const generateKey = await jose.importJWK(publicKey);
   try {
+    const generateKey = await jose.importJWK(publicKey);
     const { payload, protectedHeader } = await jose.jwtVerify(jwt, generateKey);
 
     // check if token is expired
     if (Number(payload.exp) <= Date.now() / 1000) {
-      return {
-        status: 403,
-        message: "jwt expired",
-        data: null,
-      };
+      const responseObject = new ResponseClass();
+      responseObject.status = 403;
+      responseObject.message = "jwt expired";
+      responseObject.data = null;
+      return responseObject;
     }
 
     // check if token is more then 5 minutes into the future
     if (Number(payload.exp) >= Date.now() / 1000 + 300) {
-      return {
-        status: 403,
-        message: "jwt.exp should be less then 5 minutes (300s)",
-        data: null,
-      };
+      const responseObject = new ResponseClass();
+      responseObject.status = 403;
+      responseObject.message = "jwt.exp should be less then 5 minutes (300s)";
+      responseObject.data = null;
+      return responseObject;
     }
 
     // check if jku matches the jku registered in the auth server
     // jku = url to the public key
     if (protectedHeader.jku) {
       if (protectedHeader.jku.toLowerCase() !== jku.toLowerCase()) {
-        return {
-          status: 403,
-          message: "jku missmatch",
-          data: null,
-        };
+        const responseObject = new ResponseClass();
+        responseObject.status = 403;
+        responseObject.message = "jku missmatch";
+        responseObject.data = null;
+        return responseObject;
       }
     }
 
     // check if the key has a kid
     // kid = unique id of the public private key pair
     if (!protectedHeader.kid) {
-      return {
-        status: 403,
-        message: "kid is missing",
-        data: null,
-      };
+      const responseObject = new ResponseClass();
+      responseObject.status = 403;
+      responseObject.data = null;
+      responseObject.message = "missing kid";
+      return responseObject;
     }
 
     // check if the kid in the sent jwt matches the kid of the public key
     if (protectedHeader.kid.toLowerCase() !== publicKey.kid.toLowerCase()) {
-      return {
-        status: 403,
-        message: "kid missmatch",
-        data: null,
-      };
+      const responseObject = new ResponseClass();
+      responseObject.status = 403;
+      responseObject.data = null;
+      responseObject.message = "kid missmatch";
+      return responseObject;
     }
 
     // check if the typ of the header matches JWT
     if (protectedHeader.typ && protectedHeader.typ.toUpperCase() !== "JWT") {
-      return {
-        status: 403,
-        message: "invalid typ",
-        data: null,
-      };
+      const responseObject = new ResponseClass();
+      responseObject.status = 403;
+      responseObject.data = null;
+      responseObject.message = "invalid typ";
+      return responseObject;
     }
 
     // check if the algorithem matches RS382 or ES384 in the sent jwt
@@ -92,38 +92,36 @@ export const authenticate = async (
         });
 
       if (!client) {
-        return {
-          status: 403,
-          message: "invalid client_id",
-          data: null,
-        };
+        const responseObject = new ResponseClass();
+        responseObject.status = 403;
+        responseObject.data = null;
+        responseObject.message = "invalid client_id";
+        return responseObject;
       }
 
       if (client.client_id !== payload.sub) {
-        return {
-          status: 403,
-          message: "jwt.sub jwt.iss and clientId missmatch",
-          data: null,
-        };
+        const responseObject = new ResponseClass();
+        responseObject.status = 403;
+        responseObject.data = null;
+        responseObject.message = "jwt.sub jwt.iss and clientId missmatch";
+        return responseObject;
       }
 
       const accessTokenUrl = process.env.AUTH_URL;
       if (payload.aud !== accessTokenUrl) {
-        console.log(payload.aud);
-        console.log(accessTokenUrl);
-        return {
-          status: 403,
-          message: "jwt.aud and token url missmatch",
-          data: null,
-        };
+        const responseObject = new ResponseClass();
+        responseObject.status = 403;
+        responseObject.data = null;
+        responseObject.message = "jwt.aud and token url missmatch";
+        return responseObject;
       }
 
       if (!payload.jti) {
-        return {
-          status: 403,
-          message: "jwt.jti value is invalid",
-          data: null,
-        };
+        const responseObject = new ResponseClass();
+        responseObject.status = 403;
+        responseObject.message = "jwt.jti value is invalid";
+        responseObject.data = null;
+        return responseObject;
       }
 
       // authorize scopes
@@ -172,25 +170,28 @@ export const authenticate = async (
       responseObject.message = "authorization successfull";
       return responseObject;
     } else {
-      return {
-        status: 401,
-        message: "invalid algoritm only RS384 or ES384 supported",
-        data: null,
-      };
+      const responseObject = new ResponseClass();
+      responseObject.status = 401;
+      responseObject.data = null;
+      responseObject.message = "invalid algoritm only RS384 or ES384 supported";
+      return responseObject;
     }
   } catch (error) {
+    console.log(error);
     if (error.code === "ERR_JWT_EXPIRED") {
-      return {
-        status: 401,
-        data: null,
-        message: "jwt expired",
-      };
+      const responseObject = new ResponseClass();
+      responseObject.status = 401;
+      responseObject.data = null;
+      responseObject.message = "jwt has expired";
+      return responseObject;
     } else {
-      return {
-        status: 500,
-        data: null,
-        message: error,
+      const responseObject = new ResponseClass();
+      responseObject.status = 500;
+      responseObject.data = {
+        error: error,
       };
+      responseObject.message = "an unexpected error occred when authenticating";
+      return responseObject;
     }
   }
 };
