@@ -40,7 +40,7 @@ export const authenticationFlow = async (
   const client = await prisma.clients
     .findUnique({
       where: {
-        client_id: clientId,
+        clientId,
       },
     })
     .finally(async () => {
@@ -68,13 +68,13 @@ export const authenticationFlow = async (
     };
   }
 
-  const clientHost = client.client_host;
+  const clientHost = client.clientHost;
   const clientUrl = new URL(clientHost);
 
   // check if the request originates from the registered client host and if it's the same host that stores the public key
   if (
     clientUrl.hostname !== host ||
-    host !== new URL(client.client_public_key_endpoint).hostname
+    host !== new URL(client.clientPublicKeyEndpoint).hostname
   ) {
     return {
       status: 401,
@@ -98,7 +98,7 @@ export const authenticationFlow = async (
     return responseObject;
   }
 
-  const getClientPublicKey = await fetch(client.client_public_key_endpoint, {
+  const getClientPublicKey = await fetch(client.clientPublicKeyEndpoint, {
     method: "GET",
   });
 
@@ -116,7 +116,7 @@ export const authenticationFlow = async (
   const authVerify = await authenticate(
     JSON.parse(clientPublicKey),
     client_assertion,
-    client.client_public_key_endpoint,
+    client.clientPublicKeyEndpoint,
     parsedScopes
   );
 

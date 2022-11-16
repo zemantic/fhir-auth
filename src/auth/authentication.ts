@@ -81,7 +81,7 @@ export const authenticate = async (
       const client = await prisma.clients
         .findUnique({
           where: {
-            client_id: payload.iss,
+            clientId: payload.iss,
           },
         })
         .catch((e) => {
@@ -99,7 +99,7 @@ export const authenticate = async (
         return responseObject;
       }
 
-      if (client.client_id !== payload.sub) {
+      if (client.clientId !== payload.sub) {
         const responseObject = new ResponseClass();
         responseObject.status = 403;
         responseObject.data = null;
@@ -148,13 +148,13 @@ export const authenticate = async (
       const jwtKey = new TextEncoder().encode(process.env.JWT_KEY);
       const jwt: string = await new jose.SignJWT({
         scopes: compressAuthorizeScopes,
-        client: client.client_id,
+        client: client.clientId,
         clientId: Number(client.id),
       })
         .setProtectedHeader({
           alg: "HS256",
         })
-        .setAudience(client.client_host)
+        .setAudience(client.clientHost)
         .setIssuedAt(Date.now() / 1000)
         .setExpirationTime(`300s`)
         .sign(jwtKey);
@@ -233,7 +233,7 @@ export const authorize = async (
 
   privilages.forEach((privilage) => {
     let tempResource = clientPrivilages.find(
-      (cprivilage) => cprivilage.resource.resource_name === privilage.resource
+      (cprivilage) => cprivilage.resource.resourceName === privilage.resource
     );
     if (tempResource) {
       let readPrivilage = tempResource.read;
@@ -290,7 +290,7 @@ export const authorize = async (
       });
 
       let tempAuthorization = {
-        resource: tempResource.resource.resource_name,
+        resource: tempResource.resource.resourceName,
         resourceId: Number(tempResource.resource.id),
         privilages: tempAuthorizationPrivilages,
       };

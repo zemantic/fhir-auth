@@ -26,7 +26,7 @@ export const readResources = async (fhirVersion: number) => {
   const resources = await prisma.resources
     .findMany({
       where: {
-        fhir_version: fhirVersion,
+        fhirVersion,
       },
     })
     .catch((e) => {
