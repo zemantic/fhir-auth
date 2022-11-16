@@ -98,7 +98,9 @@ export const authenticationFlow = async (
     return responseObject;
   }
 
-  const getClientPublicKey = await fetch(client.client_public_key_endpoint);
+  const getClientPublicKey = await fetch(client.client_public_key_endpoint, {
+    method: "GET",
+  });
 
   if (getClientPublicKey.status !== 200) {
     return {
@@ -128,13 +130,7 @@ export const authenticationFlow = async (
     };
   }
 
-  return {
-    status: 200,
-    data: {
-      data: authVerify,
-    },
-    message: "matched",
-  };
+  return authVerify;
 };
 
 const parseScopes = async (scopes: string) => {
@@ -148,7 +144,7 @@ const parseScopes = async (scopes: string) => {
   //   const regex = /patient|system|user|\/([A-z]*?)\.(.*)\?(.*)/gm;
 
   const regex = new RegExp(
-    "(patient|system|user)\\/([A-z]*?)\\.(.*)\\?(.*)",
+    "(patient|system|user)\\/([A-z]*?)\\.(.*)\\.*?(.*)",
     "gm"
   );
 
