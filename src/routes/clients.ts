@@ -1,9 +1,5 @@
 import { Router } from "express";
-import {
-  createClient,
-  getClientById,
-  readClient,
-} from "../controllers/clients";
+import { createClient, readClient } from "../controllers/clients";
 
 const route = Router();
 
