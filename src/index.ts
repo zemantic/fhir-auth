@@ -7,6 +7,7 @@ import { keysRoute } from "./routes/keys";
 import { clientRoutes } from "./routes/clients";
 import { userRoutes } from "./routes/users";
 import { resourceRoutes } from "./routes/resources";
+import { fhirRoutes } from "./routes/fhir";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use(keysRoute);
 app.use("/api", clientRoutes);
 app.use(userRoutes);
 app.use("/api", resourceRoutes);
+app.use(fhirRoutes);
 
 app.get("/", (req, res) => {
   return res.status(200).json({ msg: `FhIR Auth Server` });
