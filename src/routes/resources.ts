@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { readResources } from "../controllers/resourcesController";
+import { readResources } from "../controllers/resources";
 
 const routes = Router();
 

@@ -38,14 +38,15 @@ export const readResources = async (fhirVersion: number) => {
 
   const responseObject = new ResponseClass();
   if (resources instanceof Error) {
-    responseObject.data = resources;
+    responseObject.data = {
+      error: resources.message,
+    };
     responseObject.message = "an error occured in getting resources";
     responseObject.status = 500;
     return responseObject;
   }
 
   const tempResources: Array<ResourceClass> = [];
-
   resources.forEach((resource) => {
     let tempObject = new ResourceClass(resource);
     tempResources.push(tempObject);
