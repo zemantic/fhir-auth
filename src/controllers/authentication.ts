@@ -159,9 +159,10 @@ const parseScopes = async (scopes: string) => {
       subScopes[0] === "patient"
     ) {
       if (subScopes[1] && subScopes[2]) {
+        let tempScopes = subScopes[2].split("?")[0].split("");
         let tempPrivilage = {
           resource: subScopes[1],
-          operations: subScopes[2].split(""),
+          operations: tempScopes,
         };
         outputScopes.push(tempPrivilage);
       }
