@@ -25,7 +25,7 @@ export const authenticate = async (
     if (Number(payload.exp) >= Date.now() / 1000 + 300) {
       const responseObject = new ResponseClass();
       responseObject.status = 403;
-      responseObject.message = "jwt.exp should be less then 5 minutes (300s)";
+      responseObject.message = "jwt.exp should be less than 5 minutes (300s)";
       responseObject.data = null;
       return responseObject;
     }
@@ -342,4 +342,201 @@ const compressScopes = (
   });
 
   return compressedAuthScopes;
+};
+
+export const verifyJwt = async (jwt: string | undefined) => {
+  const responseObject = new ResponseClass();
+
+  // check if authorization header is present
+  if (!jwt) {
+    responseObject.status = 401;
+    responseObject.data = null;
+    responseObject.message = `no authorization header present`;
+    return responseObject;
+  }
+
+  // check if authorization token is bearer token
+  const token = jwt.split(" ");
+  if (token[0].toLowerCase() !== "bearer") {
+    responseObject.status = 401;
+    responseObject.data = null;
+    responseObject.message = `token is not a bearer token`;
+    return responseObject;
+  }
+
+  // verify the JWT token
+  try {
+    const jwtKey = new TextEncoder().encode(process.env.JWT_KEY);
+    const { payload, protectedHeader } = await jose.jwtDecrypt(jwt, jwtKey);
+    const clientId = payload.clientId;
+    const scopes = payload.scopes;
+
+    // check if jwt is within the 5 minutes window
+    if (Number(payload.exp) >= Date.now() / 1000 + 300) {
+      responseObject.status = 401;
+      responseObject.message = `jwt.exp should be less than 5 minutes`;
+      responseObject.data = null;
+      return responseObject;
+    }
+
+    if (clientId && scopes) {
+      responseObject.status = 200;
+      responseObject.data = {
+        clientId,
+        scopes,
+      };
+      responseObject.message = "jwt successfully verified";
+      return responseObject;
+    } else {
+      responseObject.status = 401;
+      responseObject.data = null;
+      responseObject.message = "invalid token";
+      return responseObject;
+    }
+  } catch (error) {
+    const responseObject = new ResponseClass();
+    if (error.code === "ERR_JWT_EXPIREd") {
+      responseObject.status = 401;
+      responseObject.data = null;
+      responseObject.message = error.code;
+      return responseObject;
+    } else {
+      responseObject.status = 401;
+      responseObject.data = null;
+      responseObject.message = "an unexpected error occured";
+      return responseObject;
+    }
+  }
+};
+
+export const verifyScopes = async (
+  scopes: {
+    create: number[];
+    read: number[];
+    update: number[];
+    delete: number[];
+    search: number[];
+  },
+  clientsId: number
+) => {
+  const verifiedPrivilages: Array<{
+    resource: string;
+    resourceId: number;
+    privilages: {
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+      search: boolean;
+    };
+  }> = [];
+
+  let concatScopes = [
+    new Set([
+      ...scopes.create,
+      ...scopes.read,
+      ...scopes.update,
+      ...scopes.delete,
+      ...scopes.search,
+    ]),
+  ];
+
+  let tempArray: number[] = [];
+  concatScopes.forEach((scope) => {
+    tempArray.push(Number(scope));
+  });
+
+  const getPrivilages = await prisma.clientPrivilages.findMany({
+    where: {
+      resourcesId: { in: tempArray },
+      clientsId: clientsId,
+    },
+    include: {
+      resource: true,
+    },
+  });
+
+  let resources: {
+    resource: string;
+    resourceId: number;
+    privilages: {
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+      search: boolean;
+    };
+  }[] = [];
+
+  getPrivilages.forEach((privilage) => {
+    let tempResource = {
+      resource: privilage.resource.resourceName,
+      resourceId: Number(privilage.resourcesId),
+      privilages: {
+        create: false,
+        read: false,
+        update: false,
+        delete: false,
+        search: false,
+      },
+    };
+
+    resources.push(tempResource);
+  });
+
+  scopes.create.forEach((scope) => {
+    const resourceIndex = resources.findIndex(
+      (resource) => resource.resourceId === scope
+    );
+    if (resourceIndex !== -1) {
+      resources[resourceIndex].privilages.create = true;
+    }
+  });
+
+  scopes.read.forEach((scope) => {
+    const resourceIndex = resources.findIndex(
+      (resource) => resource.resourceId === scope
+    );
+    if (resourceIndex !== -1) {
+      resources[resourceIndex].privilages.read = true;
+    }
+  });
+
+  scopes.update.forEach((scope) => {
+    const resourceIndex = resources.findIndex(
+      (resource) => resource.resourceId === scope
+    );
+    if (resourceIndex !== -1) {
+      resources[resourceIndex].privilages.update = true;
+    }
+  });
+
+  scopes.update.forEach((scope) => {
+    const resourceIndex = resources.findIndex(
+      (resource) => resource.resourceId === scope
+    );
+    if (resourceIndex !== -1) {
+      resources[resourceIndex].privilages.delete = true;
+    }
+  });
+
+  scopes.delete.forEach((scope) => {
+    const resourceIndex = resources.findIndex(
+      (resource) => resource.resourceId === scope
+    );
+    if (resourceIndex !== -1) {
+      resources[resourceIndex].privilages.delete = true;
+    }
+  });
+
+  scopes.search.forEach((scope) => {
+    const resourceIndex = resources.findIndex(
+      (resource) => resource.resourceId === scope
+    );
+    if (resourceIndex !== -1) {
+      resources[resourceIndex].privilages.search = true;
+    }
+  });
+
+  return resources;
 };
