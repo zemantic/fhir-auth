@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import express from "express";
+import * as express from "express";
 import cors from "cors";
 import { oauthRoutes } from "./routes/authentication";
 import { wellKnownRoute } from "./routes/wellKnown";
