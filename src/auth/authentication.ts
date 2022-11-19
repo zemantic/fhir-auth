@@ -187,7 +187,7 @@ export const authenticate = async (
       const responseObject = new ResponseClass();
       responseObject.status = 500;
       responseObject.data = {
-        error: error,
+        error: error.message,
       };
       responseObject.message = "an unexpected error occred when authenticating";
       return responseObject;
@@ -367,7 +367,7 @@ export const verifyJwt = async (jwt: string | undefined) => {
   // verify the JWT token
   try {
     const jwtKey = new TextEncoder().encode(process.env.JWT_KEY);
-    const { payload, protectedHeader } = await jose.jwtDecrypt(jwt, jwtKey);
+    const { payload, protectedHeader } = await jose.jwtVerify(token[1], jwtKey);
     const clientId = payload.clientId;
     const scopes = payload.scopes;
 
@@ -395,30 +395,29 @@ export const verifyJwt = async (jwt: string | undefined) => {
     }
   } catch (error) {
     const responseObject = new ResponseClass();
-    if (error.code === "ERR_JWT_EXPIREd") {
+    if (error.code === "ERR_JWT_EXPIRED") {
       responseObject.status = 401;
       responseObject.data = null;
       responseObject.message = error.code;
       return responseObject;
     } else {
       responseObject.status = 401;
-      responseObject.data = null;
+      responseObject.data = {
+        error: error.message,
+      };
       responseObject.message = "an unexpected error occured";
       return responseObject;
     }
   }
 };
 
-export const verifyScopes = async (
-  scopes: {
-    create: number[];
-    read: number[];
-    update: number[];
-    delete: number[];
-    search: number[];
-  },
-  clientsId: number
-) => {
+export const verifyScopes = async (scopes: {
+  create: number[];
+  read: number[];
+  update: number[];
+  delete: number[];
+  search: number[];
+}) => {
   const verifiedPrivilages: Array<{
     resource: string;
     resourceId: number;
@@ -432,7 +431,7 @@ export const verifyScopes = async (
   }> = [];
 
   let concatScopes = [
-    new Set([
+    ...new Set([
       ...scopes.create,
       ...scopes.read,
       ...scopes.update,
@@ -441,15 +440,9 @@ export const verifyScopes = async (
     ]),
   ];
 
-  let tempArray: number[] = [];
-  concatScopes.forEach((scope) => {
-    tempArray.push(Number(scope));
-  });
-
   const getPrivilages = await prisma.clientPrivilages.findMany({
     where: {
-      resourcesId: { in: tempArray },
-      clientsId: clientsId,
+      resourcesId: { in: concatScopes },
     },
     include: {
       resource: true,

@@ -3,32 +3,33 @@ import { verifyJwt, verifyScopes } from "../auth/authentication";
 
 const route = Router();
 
-route.get("/fhir/:resource/:id", (req, res, next) => {
-  const tempPrivilages = [
-    {
-      resource: "Patient",
-      resourceId: 1,
-      privilages: {
-        create: true,
-        read: true,
-        search: true,
-        update: true,
-        delete: true,
-      },
-    },
-  ];
+route.get(
+  "/fhir/:resource/:id",
+  async (req, res, next) => {
+    const token = req.headers.authorization;
+    const verify = await verifyJwt(token);
+    if (verify.status !== 200) {
+      return res.status(verify.status).json(verify);
+    }
+    res.locals.scopes = verify.data.scopes;
+    res.locals.clientId = verify.data.clientId;
+    next();
+  },
+  async (req, res, next) => {
+    const verfiyScopes = await verifyScopes(res.locals.scopes);
+    const checkResource = verfiyScopes.findIndex(
+      (privilage) =>
+        privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
+    );
 
-  const checkResource = tempPrivilages.findIndex(
-    (privilage) =>
-      privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
-  );
+    if (checkResource !== -1 && verfiyScopes[checkResource].privilages.read) {
+      // TODO: ADD FETCH REQUEST TO FHIR SERVER
+      return res.status(200).send(req.query);
+    }
 
-  if (checkResource !== -1 && tempPrivilages[checkResource].privilages.read) {
-    return res.status(200).send(req.query);
+    return res.status(403).send(req.query);
   }
-
-  return res.status(403).send(req.query);
-});
+);
 
 route.get("/fhir/:resource", (req, res, next) => {
   return res.json({});
