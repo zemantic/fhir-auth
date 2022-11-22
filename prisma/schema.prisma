@@ -32,6 +32,8 @@ model clients {
   users                   users?             @relation(fields: [usersId], references: [id])
   usersId                 BigInt?
   clientPrivilages        clientPrivilages[]
+  fhirEndpoint            String
+  isActive                Boolean @default(true)
 }
 
 model clientPrivilages {

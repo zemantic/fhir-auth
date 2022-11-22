@@ -19,10 +19,13 @@ class ClientClass {
     const privilages: Array<any> = this.map.get("clientPrivilages");
     for (let index = 0; index < privilages.length; index++) {
       const privilage = privilages[index];
-      privilage.id = Number(privilage.id);
-      privilage.resource.id = Number(privilage.resource.id);
-      privilage.resourcesId = Number(privilage.resourcesId);
-      privilage.clientsId = Number(privilage.clientsId);
+      if (privilage.id) privilage.id = Number(privilage.id);
+      if (privilage.resource.id)
+        privilage.resource.id = Number(privilage.resource.id);
+      if (privilage.resourcesId)
+        privilage.resourcesId = Number(privilage.resourcesId);
+      if (privilage.clientsId)
+        privilage.clientsId = Number(privilage.clientsId);
       privilages[index] = privilage;
     }
     map.set("clientPrivilages", privilages);
@@ -49,7 +52,9 @@ export const createClient = async (
       delete: boolean;
       search: boolean;
     };
-  }>
+  }>,
+  fhirEndpoint: string,
+  isActive: boolean
 ) => {
   const newClient = await prisma.clients
     .create({
@@ -58,6 +63,8 @@ export const createClient = async (
         clientHost,
         clientPublicKeyEndpoint,
         usersId,
+        fhirEndpoint,
+        isActive: isActive,
       },
     })
     .catch((e) => {
@@ -205,7 +212,153 @@ export const readClient = async (clientId: string) => {
   return responseObject;
 };
 
-export const updateClient = async () => {};
+export const updateClient = async (
+  clientsId: number,
+  clientName: string,
+  clientHost: string,
+  clientPublicKeyEndpoint: string,
+  usersId: number,
+  privilages: Array<{
+    resource: string;
+    resourcesId: number;
+    id: number;
+    privilages: {
+      create: boolean;
+      read: boolean;
+      update: boolean;
+      delete: boolean;
+      search: boolean;
+    };
+  }>,
+  fhirEndpoint: string,
+  isActive: boolean
+) => {
+  const updateClient = await prisma.clients
+    .update({
+      where: {
+        id: clientsId,
+      },
+      data: {
+        clientName,
+        clientHost,
+        clientPublicKeyEndpoint,
+        updatedAt: new Date().toISOString(),
+        usersId,
+        fhirEndpoint,
+        isActive,
+      },
+      include: {
+        clientPrivilages: {
+          include: {
+            resource: {
+              select: {
+                resourceName: true,
+                id: true,
+              },
+            },
+          },
+        },
+      },
+    })
+    .catch((e) => {
+      return new Error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+
+  const responseObject = new ResponseClass();
+
+  if (updateClient instanceof Error) {
+    responseObject.status = 500;
+    responseObject.data = {
+      error: updateClient.message,
+    };
+    responseObject.message = updateClient.message;
+    return responseObject;
+  }
+
+  const toBeDeleted: number[] = [];
+
+  updateClient.clientPrivilages.forEach((privilage) => {
+    toBeDeleted.push(Number(privilage.id));
+  });
+
+  privilages.forEach(async (privilage) => {
+    toBeDeleted.splice(toBeDeleted.indexOf(privilage.id), 1);
+
+    const findPrivilage = await prisma.clientPrivilages
+      .findFirst({
+        where: {
+          clientsId,
+          resourcesId: privilage.resourcesId,
+        },
+      })
+      .catch((e) => {
+        throw e;
+      })
+      .finally(async () => {
+        await prisma.$disconnect();
+      });
+
+    if (findPrivilage) {
+      await prisma.clientPrivilages.update({
+        where: {
+          id: findPrivilage.id,
+        },
+        data: {
+          create: privilage.privilages.create,
+          update: privilage.privilages.update,
+          read: privilage.privilages.read,
+          delete: privilage.privilages.delete,
+          search: privilage.privilages.search,
+        },
+      });
+    } else {
+      await prisma.clientPrivilages
+        .create({
+          data: {
+            create: privilage.privilages.create,
+            update: privilage.privilages.update,
+            read: privilage.privilages.read,
+            delete: privilage.privilages.delete,
+            search: privilage.privilages.search,
+            clientsId,
+            resourcesId: privilage.resourcesId,
+          },
+        })
+        .catch((e) => {
+          throw e;
+        })
+        .finally(async () => {
+          await prisma.$disconnect();
+        });
+    }
+  });
+
+  await prisma.clientPrivilages
+    .deleteMany({
+      where: {
+        id: {
+          in: toBeDeleted,
+        },
+      },
+    })
+    .catch((e) => {
+      return new Error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+
+  responseObject.status = 200;
+  responseObject.data = {
+    client: new ClientClass(updateClient),
+    privilages,
+  };
+  responseObject.message = "client successfully updated";
+  return responseObject;
+};
 
 export const deleteClient = async () => {};
 
