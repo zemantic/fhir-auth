@@ -7,14 +7,15 @@ const jwtKey = new TextEncoder().encode(process.env.JWT_KEY);
 
 const generateSearchToken = async (clientId, client) => {
   try {
+    let scopes = {
+      create: [],
+      read: [],
+      update: [],
+      search: [1, 2],
+      delete: [],
+    };
     const jwt = await new jose.SignJWT({
-      scopes: {
-        create: [],
-        read: [],
-        update: [],
-        search: [1, 2],
-        delete: [],
-      },
+      scopes: scopes,
       client: client,
       clientId: clientId,
     })
@@ -29,6 +30,7 @@ const generateSearchToken = async (clientId, client) => {
     return {
       status: 200,
       token: jwt,
+      scopes,
     };
   } catch (error) {
     return {
