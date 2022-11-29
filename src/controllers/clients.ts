@@ -419,3 +419,43 @@ export const getClientByClientId = async (clientId: string) => {
     message: `client found with ${clientId}`,
   };
 };
+
+export const getAllClients = async (skip: number, take: number) => {
+  const clients = await prisma.clients
+    .findMany({
+      skip,
+      take,
+    })
+    .catch((e) => {
+      return new Error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+
+  if (clients instanceof Error) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 500;
+    responseObject.data = null;
+    responseObject.message = "An error occred when fetching clients";
+    return responseObject;
+  }
+
+  const tempClients: ClientClass[] = [];
+
+  clients.forEach((client) => {
+    const tempClient = new ClientClass(tempClients);
+    tempClients.push(tempClient);
+  });
+
+  const responseObject = new ResponseClass();
+  responseObject.status = 200;
+  responseObject.data = {
+    clients: tempClients,
+    skip,
+    take,
+  };
+  responseObject.message = `${tempClients.length} client[s] fetched`;
+
+  return responseObject;
+};

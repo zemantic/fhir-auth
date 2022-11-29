@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { createClient, readClient, updateClient } from "../controllers/clients";
+import {
+  createClient,
+  getAllClients,
+  readClient,
+  updateClient,
+} from "../controllers/clients";
 
 const route = Router();
 
@@ -54,6 +59,13 @@ route.patch("/client", async (req, res, next) => {
     isActive
   );
 
+  return res.status(request.status).json(request);
+});
+
+route.get("/client/all", async (req, res, next) => {
+  const skip = Number(req.query.skip);
+  const take = 20;
+  const request = await getAllClients(skip, take);
   return res.status(request.status).json(request);
 });
 
