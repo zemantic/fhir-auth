@@ -5,7 +5,7 @@ config();
 const time = Math.round(Date.now() / 1000);
 const jwtKey = new TextEncoder().encode(process.env.JWT_KEY);
 
-const generateDeleteToken = async (clientId, client) => {
+const generateCreateToken = async (clientId, client) => {
   try {
     const jwt = await new jose.SignJWT({
       scopes: {
