@@ -255,6 +255,7 @@ export const authorize = async (
         delete: false,
         search: false,
       };
+
       privilage.operations.forEach((operation) => {
         if (operation === "c" && createPrivilage === true) {
           tempAuthorizationPrivilages.create = true;
@@ -368,8 +369,8 @@ export const verifyJwt = async (jwt: string | undefined) => {
   try {
     const jwtKey = new TextEncoder().encode(process.env.JWT_KEY);
     const { payload, protectedHeader } = await jose.jwtVerify(token[1], jwtKey);
-    const clientId = payload.clientId;
-    const scopes = payload.scopes;
+    const clientId = payload.clientId ?? null;
+    const scopes = payload.scopes ?? null;
 
     // check if jwt is within the 5 minutes window
     if (Number(payload.exp) >= Date.now() / 1000 + 300) {
@@ -418,118 +419,120 @@ export const verifyScopes = async (scopes: {
   delete: number[];
   search: number[];
 }) => {
-  const verifiedPrivilages: Array<{
-    resource: string;
-    resourceId: number;
-    privilages: {
-      create: boolean;
-      read: boolean;
-      update: boolean;
-      delete: boolean;
-      search: boolean;
-    };
-  }> = [];
-
-  let concatScopes = [
-    ...new Set([
-      ...scopes.create,
-      ...scopes.read,
-      ...scopes.update,
-      ...scopes.delete,
-      ...scopes.search,
-    ]),
-  ];
-
-  const getPrivilages = await prisma.clientPrivilages.findMany({
-    where: {
-      resourcesId: { in: concatScopes },
-    },
-    include: {
-      resource: true,
-    },
-  });
-
-  let resources: {
-    resource: string;
-    resourceId: number;
-    privilages: {
-      create: boolean;
-      read: boolean;
-      update: boolean;
-      delete: boolean;
-      search: boolean;
-    };
-  }[] = [];
-
-  getPrivilages.forEach((privilage) => {
-    let tempResource = {
-      resource: privilage.resource.resourceName,
-      resourceId: Number(privilage.resourcesId),
+  try {
+    const verifiedPrivilages: Array<{
+      resource: string;
+      resourceId: number;
       privilages: {
-        create: false,
-        read: false,
-        update: false,
-        delete: false,
-        search: false,
+        create: boolean;
+        read: boolean;
+        update: boolean;
+        delete: boolean;
+        search: boolean;
+      };
+    }> = [];
+
+    let concatScopes = [
+      ...new Set([
+        ...scopes.create,
+        ...scopes.read,
+        ...scopes.update,
+        ...scopes.delete,
+        ...scopes.search,
+      ]),
+    ];
+
+    const getPrivilages = await prisma.clientPrivilages.findMany({
+      where: {
+        resourcesId: { in: concatScopes },
       },
-    };
+      include: {
+        resource: true,
+      },
+    });
 
-    resources.push(tempResource);
-  });
+    let resources: {
+      resource: string;
+      resourceId: number;
+      privilages: {
+        create: boolean;
+        read: boolean;
+        update: boolean;
+        delete: boolean;
+        search: boolean;
+      };
+    }[] = [];
 
-  scopes.create.forEach((scope) => {
-    const resourceIndex = resources.findIndex(
-      (resource) => resource.resourceId === scope
-    );
-    if (resourceIndex !== -1) {
-      resources[resourceIndex].privilages.create = true;
-    }
-  });
+    getPrivilages.forEach((privilage) => {
+      let tempResource = {
+        resource: privilage.resource.resourceName,
+        resourceId: Number(privilage.resourcesId),
+        privilages: {
+          create: false,
+          read: false,
+          update: false,
+          delete: false,
+          search: false,
+        },
+      };
 
-  scopes.read.forEach((scope) => {
-    const resourceIndex = resources.findIndex(
-      (resource) => resource.resourceId === scope
-    );
-    if (resourceIndex !== -1) {
-      resources[resourceIndex].privilages.read = true;
-    }
-  });
+      resources.push(tempResource);
+    });
 
-  scopes.update.forEach((scope) => {
-    const resourceIndex = resources.findIndex(
-      (resource) => resource.resourceId === scope
-    );
-    if (resourceIndex !== -1) {
-      resources[resourceIndex].privilages.update = true;
-    }
-  });
+    scopes.create.forEach((scope) => {
+      const resourceIndex = resources.findIndex(
+        (resource) => resource.resourceId === scope
+      );
+      if (resourceIndex !== -1) {
+        resources[resourceIndex].privilages.create = true;
+      }
+    });
 
-  scopes.update.forEach((scope) => {
-    const resourceIndex = resources.findIndex(
-      (resource) => resource.resourceId === scope
-    );
-    if (resourceIndex !== -1) {
-      resources[resourceIndex].privilages.delete = true;
-    }
-  });
+    scopes.read.forEach((scope) => {
+      const resourceIndex = resources.findIndex(
+        (resource) => resource.resourceId === scope
+      );
+      if (resourceIndex !== -1) {
+        resources[resourceIndex].privilages.read = true;
+      }
+    });
 
-  scopes.delete.forEach((scope) => {
-    const resourceIndex = resources.findIndex(
-      (resource) => resource.resourceId === scope
-    );
-    if (resourceIndex !== -1) {
-      resources[resourceIndex].privilages.delete = true;
-    }
-  });
+    scopes.update.forEach((scope) => {
+      const resourceIndex = resources.findIndex(
+        (resource) => resource.resourceId === scope
+      );
+      if (resourceIndex !== -1) {
+        resources[resourceIndex].privilages.update = true;
+      }
+    });
 
-  scopes.search.forEach((scope) => {
-    const resourceIndex = resources.findIndex(
-      (resource) => resource.resourceId === scope
-    );
-    if (resourceIndex !== -1) {
-      resources[resourceIndex].privilages.search = true;
-    }
-  });
+    scopes.update.forEach((scope) => {
+      const resourceIndex = resources.findIndex(
+        (resource) => resource.resourceId === scope
+      );
+      if (resourceIndex !== -1) {
+        resources[resourceIndex].privilages.delete = true;
+      }
+    });
 
-  return resources;
+    scopes.delete.forEach((scope) => {
+      const resourceIndex = resources.findIndex(
+        (resource) => resource.resourceId === scope
+      );
+      if (resourceIndex !== -1) {
+        resources[resourceIndex].privilages.delete = true;
+      }
+    });
+
+    scopes.search.forEach((scope) => {
+      const resourceIndex = resources.findIndex(
+        (resource) => resource.resourceId === scope
+      );
+      if (resourceIndex !== -1) {
+        resources[resourceIndex].privilages.search = true;
+      }
+    });
+
+    return resources;
+  } catch (error) {}
 };
