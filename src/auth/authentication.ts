@@ -412,13 +412,16 @@ export const verifyJwt = async (jwt: string | undefined) => {
   }
 };
 
-export const verifyScopes = async (scopes: {
-  create: number[];
-  read: number[];
-  update: number[];
-  delete: number[];
-  search: number[];
-}) => {
+export const verifyScopes = async (
+  scopes: {
+    create: number[];
+    read: number[];
+    update: number[];
+    delete: number[];
+    search: number[];
+  },
+  clientsId: number
+) => {
   try {
     const verifiedPrivilages: Array<{
       resource: string;
@@ -445,6 +448,7 @@ export const verifyScopes = async (scopes: {
     const getPrivilages = await prisma.clientPrivilages.findMany({
       where: {
         resourcesId: { in: concatScopes },
+        clientsId,
       },
       include: {
         resource: true,
