@@ -1,6 +1,7 @@
 const generateDeleteToken = require("./generateDeleteToken");
 const generateCreateToken = require("./generateOauthToken");
 const generateUpdateToken = require("./generateUpdateToken");
+const generateReadToken = require("./generateReadToken");
 
 const fhirEndpoint = "http://hapi.fhir.org/baseR4/";
 let patientJson;
@@ -70,7 +71,7 @@ test("update resource with put request", async () => {
       }),
     }
   );
-  console.log(await request.text());
+
   expect(request.status).toEqual(200);
 });
 
@@ -216,6 +217,23 @@ test("delete invalid fhir resource", async () => {
     }
   );
   expect(request.status).toEqual(401);
+});
+
+test("read patient", async () => {
+  const token = await generateReadToken(
+    2,
+    "dd346d0e-4dc4-4277-971d-b85789411e81"
+  );
+  console.log(token.token);
+  const request = await fetch("http://127.0.0.1:3000/fhir/Patient/768", {
+    method: "GET",
+    headers: new Headers({
+      "content-type": "application/fhir+json",
+      Authorization: `bearer ${token.token}`,
+    }),
+  });
+
+  expect(request.status).toEqual(200);
 });
 
 // test("updating patient with PATCH request", async () => {
