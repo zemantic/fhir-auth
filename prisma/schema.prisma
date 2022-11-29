@@ -27,6 +27,9 @@ model clients {
   clientId                String             @unique @default(uuid())
   clientHost              String
   clientPublicKeyEndpoint String
+  clientDescription String
+  enableGlobalSearch Boolean
+  enableBatchRequests Boolean
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @default(now())
   users                   users?             @relation(fields: [usersId], references: [id])
@@ -34,6 +37,7 @@ model clients {
   clientPrivilages        clientPrivilages[]
   fhirEndpoint            String
   isActive                Boolean @default(true)
+  retired Boolean @default(false)
 }
 
 model clientPrivilages {
