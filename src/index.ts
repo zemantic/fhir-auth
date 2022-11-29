@@ -27,7 +27,7 @@ app.use(keysRoute);
 app.use("/api", clientRoutes);
 app.use(userRoutes);
 app.use("/api", resourceRoutes);
-app.use(fhirRoutes);
+app.use("/fhir", fhirRoutes);
 
 app.get("/", (req, res) => {
   return res.status(200).json({ msg: `FhIR Auth Server` });
