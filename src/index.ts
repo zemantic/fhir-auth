@@ -17,6 +17,9 @@ const app = express();
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.json({ type: "application/fhir+json" }));
+app.use(express.text({ type: "application/fhir+xml" }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use(wellKnownRoute);
 app.use(oauthRoutes);
