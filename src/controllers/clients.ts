@@ -42,6 +42,9 @@ export const createClient = async (
   clientHost: string,
   clientPublicKeyEndpoint: string,
   usersId: number,
+  clientDescription: string,
+  batchRequests: boolean,
+  globalSearch: boolean,
   privilages: Array<{
     resource: string;
     resourcesId: number;
@@ -65,6 +68,9 @@ export const createClient = async (
         usersId,
         fhirEndpoint,
         isActive: isActive,
+        clientDescription,
+        enableBatchRequests: batchRequests,
+        enableGlobalSearch: globalSearch,
       },
     })
     .catch((e) => {
@@ -218,6 +224,9 @@ export const updateClient = async (
   clientHost: string,
   clientPublicKeyEndpoint: string,
   usersId: number,
+  clientDescription: string,
+  batchRequests: boolean,
+  globalSearch: boolean,
   privilages: Array<{
     resource: string;
     resourcesId: number;
@@ -242,10 +251,13 @@ export const updateClient = async (
         clientName,
         clientHost,
         clientPublicKeyEndpoint,
+        clientDescription,
         updatedAt: new Date().toISOString(),
         usersId,
         fhirEndpoint,
         isActive,
+        enableBatchRequests: batchRequests,
+        enableGlobalSearch: globalSearch,
       },
       include: {
         clientPrivilages: {
@@ -360,7 +372,37 @@ export const updateClient = async (
   return responseObject;
 };
 
-export const deleteClient = async () => {};
+export const deleteClient = async (id: number) => {
+  const client = await prisma.clients
+    .update({
+      where: {
+        id,
+      },
+      data: {
+        retired: true,
+      },
+    })
+    .catch((e) => {
+      return new Error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+
+  if (client instanceof Error) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 500;
+    responseObject.data = { error: client };
+    responseObject.message = client.message;
+    return responseObject;
+  }
+
+  const responseObject = new ResponseClass();
+  responseObject.status = 200;
+  responseObject.message = `client deleted with ID ${id}`;
+  responseObject.data = { client: new ClientClass(client) };
+  return responseObject;
+};
 
 export const getClientById = async (id: number) => {
   if (!id) {
