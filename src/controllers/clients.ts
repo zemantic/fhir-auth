@@ -17,16 +17,18 @@ class ClientClass {
     this.map = map;
 
     const privilages: Array<any> = this.map.get("clientPrivilages");
-    for (let index = 0; index < privilages.length; index++) {
-      const privilage = privilages[index];
-      if (privilage.id) privilage.id = Number(privilage.id);
-      if (privilage.resource.id)
-        privilage.resource.id = Number(privilage.resource.id);
-      if (privilage.resourcesId)
-        privilage.resourcesId = Number(privilage.resourcesId);
-      if (privilage.clientsId)
-        privilage.clientsId = Number(privilage.clientsId);
-      privilages[index] = privilage;
+    if (privilages) {
+      for (let index = 0; index < privilages.length; index++) {
+        const privilage = privilages[index];
+        if (privilage.id) privilage.id = Number(privilage.id);
+        if (privilage.resource.id)
+          privilage.resource.id = Number(privilage.resource.id);
+        if (privilage.resourcesId)
+          privilage.resourcesId = Number(privilage.resourcesId);
+        if (privilage.clientsId)
+          privilage.clientsId = Number(privilage.clientsId);
+        privilages[index] = privilage;
+      }
     }
     map.set("clientPrivilages", privilages);
   }
@@ -372,12 +374,10 @@ export const updateClient = async (
   return responseObject;
 };
 
-export const deleteClient = async (id: number) => {
+export const deleteClient = async (id: number, clientId: string) => {
   const client = await prisma.clients
     .update({
-      where: {
-        id,
-      },
+      where: { id, clientId },
       data: {
         retired: true,
       },
@@ -399,7 +399,7 @@ export const deleteClient = async (id: number) => {
 
   const responseObject = new ResponseClass();
   responseObject.status = 200;
-  responseObject.message = `client deleted with ID ${id}`;
+  responseObject.message = `client deleted with ID ${id ?? clientId}`;
   responseObject.data = { client: new ClientClass(client) };
   return responseObject;
 };
@@ -467,6 +467,9 @@ export const getAllClients = async (skip: number, take: number) => {
     .findMany({
       skip,
       take,
+      where: {
+        retired: false,
+      },
     })
     .catch((e) => {
       return new Error(e);
@@ -479,14 +482,14 @@ export const getAllClients = async (skip: number, take: number) => {
     const responseObject = new ResponseClass();
     responseObject.status = 500;
     responseObject.data = null;
-    responseObject.message = "An error occred when fetching clients";
+    responseObject.message = clients.message;
     return responseObject;
   }
 
   const tempClients: ClientClass[] = [];
 
   clients.forEach((client) => {
-    const tempClient = new ClientClass(tempClients);
+    const tempClient = new ClientClass(client);
     tempClients.push(tempClient);
   });
 
