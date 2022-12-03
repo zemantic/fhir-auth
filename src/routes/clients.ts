@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createClient,
+  deleteClient,
   getAllClients,
   readClient,
   updateClient,
@@ -20,9 +21,6 @@ route.post("/client", async (req, res, next) => {
   const batchRequests = req.body.enableBatchRequests;
   //TODO: Add passport support and get userID
   const userId = 1;
-
-  console.log(batchRequests);
-  console.log(globalSearch);
 
   const request = await createClient(
     clientName,
@@ -79,7 +77,12 @@ route.patch("/client", async (req, res, next) => {
   return res.status(request.status).json(request);
 });
 
-route.get("/client/all", async (req, res, next) => {
+route.delete("/client/:clientId", async (req, res, next) => {
+  const request = await deleteClient(undefined, req.params.clientId);
+  return res.status(request.status).json(request);
+});
+
+route.get("/get-all-clients", async (req, res, next) => {
   const skip = Number(req.query.skip);
   const take = 20;
   const request = await getAllClients(skip, take);
