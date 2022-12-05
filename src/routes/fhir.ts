@@ -7,7 +7,7 @@ import { getClientById } from "../controllers/clients";
 const route = Router();
 let fhirEndpoint;
 
-route.all("/fhir/*", async (req, res, next) => {
+route.all("/*", async (req, res, next) => {
   // return next(); // disable this after testing
   const token = req.headers.authorization;
   const verify = await verifyJwt(token);
@@ -40,9 +40,12 @@ route.all("/fhir/*", async (req, res, next) => {
 });
 
 // operators
-route.get("/fhir/:resource/([$]):operator", async (req, res, next) => {
+route.get("/:resource/([$]):operator", async (req, res, next) => {
   const operator = req.params.operator;
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiedScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -84,9 +87,12 @@ route.get("/fhir/:resource/([$]):operator", async (req, res, next) => {
   return res.status(401).json(operationOutcome);
 });
 
-route.get("/fhir/:resource/:id/([$]):operator", async (req, res, next) => {
+route.get("/:resource/:id/([$]):operator", async (req, res, next) => {
   const operator = req.params.operator;
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiedScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -128,9 +134,12 @@ route.get("/fhir/:resource/:id/([$]):operator", async (req, res, next) => {
   return res.status(401).json(operationOutcome);
 });
 
-route.post("/fhir/:resource/([$]):operator", async (req, res, next) => {
+route.post("/:resource/([$]):operator", async (req, res, next) => {
   const operator = req.params.operator;
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiedScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -173,9 +182,12 @@ route.post("/fhir/:resource/([$]):operator", async (req, res, next) => {
   return res.status(401).json(operationOutcome);
 });
 
-route.post("/fhir/:resource/:id/([$]):operator", async (req, res, next) => {
+route.post("/:resource/:id/([$]):operator", async (req, res, next) => {
   const operator = req.params.operator;
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiedScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -219,7 +231,7 @@ route.post("/fhir/:resource/:id/([$]):operator", async (req, res, next) => {
 });
 
 // misc
-route.get("/fhir/metadata", async (req, res, next) => {
+route.get("/metadata", async (req, res, next) => {
   const headers = new Headers();
   headers.set("content-type", req.headers["content-type"]);
   headers.set("accept", req.headers["accept"]);
@@ -236,9 +248,207 @@ route.get("/fhir/metadata", async (req, res, next) => {
   return res.status(request.status).send(responseText);
 });
 
+//history
+route.get("/:resource/:id/_history", async (req, res, next) => {
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
+  const checkResource = verfiedScopes.findIndex(
+    (privilage) =>
+      privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
+  );
+
+  if (checkResource !== -1 && verfiedScopes[checkResource].privilages.search) {
+    let queryStrings = "";
+    if (req.query) {
+      const splitOriginalUrl = req.originalUrl.split("?");
+      if (splitOriginalUrl[1]) {
+        queryStrings = `?${splitOriginalUrl[1]}`;
+      }
+    }
+
+    const headers = new Headers();
+    headers.set("content-type", req.headers["content-type"]);
+    headers.set("accept", req.headers["accept"]);
+
+    let endpoint = `${fhirEndpoint}/${req.params.resource}/${req.params.id}/_history${queryStrings}`;
+
+    const request = await fetch(endpoint, {
+      method: "GET",
+      headers: headers,
+    });
+
+    const responseText = await request.text();
+    res.set("content-type", request.headers.get("content-type"));
+    res.set("x-powered-by", process.env.POWERED_BY);
+    return res.status(request.status).send(responseText);
+  }
+
+  const operationOutcome = throwOperationOutcome(
+    "fatal",
+    "security",
+    "the client does not have the permission to perform this action"
+  );
+  return res.status(401).json(operationOutcome);
+});
+
+route.get("/:resource/_history", async (req, res, next) => {
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
+  const checkResource = verfiedScopes.findIndex(
+    (privilage) =>
+      privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
+  );
+
+  if (checkResource !== -1 && verfiedScopes[checkResource].privilages.search) {
+    let queryStrings = "";
+    if (req.query) {
+      const splitOriginalUrl = req.originalUrl.split("?");
+      if (splitOriginalUrl[1]) {
+        queryStrings = `?${splitOriginalUrl[1]}`;
+      }
+    }
+
+    const headers = new Headers();
+    headers.set("content-type", req.headers["content-type"]);
+    headers.set("accept", req.headers["accept"]);
+
+    let endpoint = `${fhirEndpoint}/${req.params.resource}/_history${queryStrings}`;
+
+    const request = await fetch(endpoint, {
+      method: "GET",
+      headers: headers,
+    });
+
+    const responseText = await request.text();
+    res.set("content-type", request.headers.get("content-type"));
+    res.set("x-powered-by", process.env.POWERED_BY);
+    return res.status(request.status).send(responseText);
+  }
+
+  const operationOutcome = throwOperationOutcome(
+    "fatal",
+    "security",
+    "the client does not have the permission to perform this action"
+  );
+  return res.status(401).json(operationOutcome);
+});
+
+route.get("/:resource/_search", async (req, res, next) => {
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
+  const checkResource = verfiedScopes.findIndex(
+    (privilage) =>
+      privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
+  );
+
+  if (checkResource !== -1 && verfiedScopes[checkResource].privilages.search) {
+    let queryStrings = "";
+    if (req.query) {
+      const splitOriginalUrl = req.originalUrl.split("?");
+      if (splitOriginalUrl[1]) {
+        queryStrings = `?${splitOriginalUrl[1]}`;
+      }
+    }
+
+    const headers = new Headers();
+    headers.set("content-type", req.headers["content-type"]);
+    headers.set("accept", req.headers["accept"]);
+
+    let endpoint = `${fhirEndpoint}/${req.params.resource}/_search${queryStrings}`;
+
+    const request = await fetch(endpoint, {
+      method: "GET",
+      headers: headers,
+    });
+
+    const responseText = await request.text();
+    res.set("content-type", request.headers.get("content-type"));
+    res.set("x-powered-by", process.env.POWERED_BY);
+
+    return res.status(request.status).send(responseText);
+  }
+
+  const operationOutcome = throwOperationOutcome(
+    "fatal",
+    "security",
+    "the client does not have the permission to perform this action"
+  );
+  return res.status(401).json(operationOutcome);
+});
+
+route.get("/_history", async (req, res, next) => {
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
+
+  let queryStrings = "";
+  if (req.query) {
+    const splitOriginalUrl = req.originalUrl.split("?");
+    if (splitOriginalUrl[1]) {
+      queryStrings = `?${splitOriginalUrl[1]}`;
+    }
+  }
+
+  const headers = new Headers();
+  // set the contet type to JSON by default because only json is currently supported
+  // headers.set("content-type", req.headers['content-type'])
+  // headers.set("accept", req.headers['accept'])
+  headers.set("content-type", "application/fhir+json; charset=utf-8");
+  headers.set("accept", "application/fhir+json; charset=utf-8");
+
+  let endpoint = `${fhirEndpoint}/_history${queryStrings}`;
+  const request = await fetch(endpoint, {
+    method: "GET",
+    headers: headers,
+  });
+
+  // TODO: Currently only json responses are supported, support for xml return should be added
+  try {
+    // parse the bundle and remove all non privilaged types
+    const responseBundle: { entry?: [{ resource: { resourceType: string } }] } =
+      await request.json();
+    for (let index = 0; index < responseBundle.entry.length; index++) {
+      const element = responseBundle.entry[index];
+      const checkResource = verfiedScopes.findIndex(
+        (privilage) =>
+          privilage.resource.toLowerCase() ===
+          element.resource.resourceType.toLowerCase()
+      );
+      if (
+        checkResource === -1 ||
+        !verfiedScopes[checkResource].privilages.search
+      ) {
+        responseBundle.entry.splice(index, 1);
+      }
+    }
+
+    res.set("content-type", request.headers.get("content-type"));
+    res.set("x-powered-by", process.env.POWERED_BY);
+
+    return res.status(request.status).send(responseBundle);
+  } catch (error) {
+    const operationOutcome = throwOperationOutcome(
+      "fatal",
+      "security",
+      "the client does not have the permission to perform this action"
+    );
+    return res.status(401).json(operationOutcome);
+  }
+});
+
 // simple read
-route.get("/fhir/:resource/:id", async (req, res, next) => {
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
+route.get("/:resource/:id", async (req, res, next) => {
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiedScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -281,8 +491,11 @@ route.get("/fhir/:resource/:id", async (req, res, next) => {
 });
 
 // vread
-route.get("/fhir/:resource/:id/_history/:vid", async (req, res, next) => {
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
+route.get("/:resource/:id/_history/:vid", async (req, res, next) => {
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiedScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -322,8 +535,11 @@ route.get("/fhir/:resource/:id/_history/:vid", async (req, res, next) => {
 });
 
 // update
-route.put("/fhir/:resource/:id", async (req, res, next) => {
-  const verfiyScopes = await verifyScopes(res.locals.scopes);
+route.put("/:resource/:id", async (req, res, next) => {
+  const verfiyScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiyScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -374,8 +590,11 @@ route.put("/fhir/:resource/:id", async (req, res, next) => {
 });
 
 // patch
-route.patch("/fhir/:resource/:id", async (req, res, next) => {
-  const verfiyScopes = await verifyScopes(res.locals.scopes);
+route.patch("/:resource/:id", async (req, res, next) => {
+  const verfiyScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiyScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -423,8 +642,11 @@ route.patch("/fhir/:resource/:id", async (req, res, next) => {
 });
 
 // delete
-route.delete("/fhir/:resource/:id", async (req, res, next) => {
-  const verfiyScopes = await verifyScopes(res.locals.scopes);
+route.delete("/:resource/:id", async (req, res, next) => {
+  const verfiyScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiyScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -463,8 +685,11 @@ route.delete("/fhir/:resource/:id", async (req, res, next) => {
 });
 
 // create
-route.post("/fhir/:resource", async (req, res, nex) => {
-  const verfiyScopes = await verifyScopes(res.locals.scopes);
+route.post("/:resource", async (req, res, nex) => {
+  const verfiyScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiyScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -515,8 +740,11 @@ route.post("/fhir/:resource", async (req, res, nex) => {
 });
 
 // search
-route.post("/fhir/:resource/_search", async (req, res, next) => {
-  const verfiyScopes = await verifyScopes(res.locals.scopes);
+route.post("/:resource/_search", async (req, res, next) => {
+  const verfiyScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiyScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -573,8 +801,11 @@ route.post("/fhir/:resource/_search", async (req, res, next) => {
   return res.status(401).json(operationOutcome);
 });
 
-route.get("/fhir/:resource", async (req, res, next) => {
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
+route.get("/:resource", async (req, res, next) => {
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiedScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
@@ -613,19 +844,23 @@ route.get("/fhir/:resource", async (req, res, next) => {
   return res.status(401).json(operationOutcome);
 });
 
-route.get("/fhir", async (req, res, next) => {
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
+route.get("/", async (req, res, next) => {
+  const verifiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const splitOriginalUrl = req.originalUrl.split("?");
 
   if (req.query._type) {
     const splitTypes = (req.query._type as string).split(",");
+
     splitTypes.forEach((type: string) => {
-      const checkResource = verfiedScopes.findIndex(
+      const checkResource = verifiedScopes.findIndex(
         (privilage) => privilage.resource.toLowerCase() === type.toLowerCase()
       );
       if (
         checkResource === -1 ||
-        !verfiedScopes[checkResource].privilages.search
+        !verifiedScopes[checkResource].privilages.search
       ) {
         splitTypes.splice(checkResource, 1);
       }
@@ -684,8 +919,11 @@ route.get("/fhir", async (req, res, next) => {
 });
 
 // compartment requests
-route.get("/fhir/:compartmant/:id/:type", async (req, res, next) => {
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
+route.get("/:compartmant/:id/:type", async (req, res, next) => {
+  const verfiedScopes = await verifyScopes(
+    res.locals.scopes,
+    res.locals.clientId
+  );
   const checkResource = verfiedScopes.findIndex(
     (privilage) =>
       privilage.resource.toLowerCase() === req.params.type.toLowerCase()
@@ -741,9 +979,21 @@ route.get("/fhir/:compartmant/:id/:type", async (req, res, next) => {
 });
 
 // batch transactions
-route.post("/fhir", async (req, res, next) => {
+route.post("/", async (req, res, next) => {
+  const client = await getClientById(res.locals.clientId);
+  const batchRequestEnabled = client.data.client.enableBatchRequests;
+  if (!batchRequestEnabled) {
+    const operationOutcome = throwOperationOutcome(
+      "fatal",
+      "security",
+      "the clinet does not have the permission to perfom this action"
+    );
+    return res.status(401).json(operationOutcome);
+  }
+
   let queryStrings = "";
   const splitOriginalUrl = req.originalUrl.split("?");
+
   if (splitOriginalUrl[1]) {
     queryStrings = `?${splitOriginalUrl[1]}`;
   }
@@ -772,147 +1022,6 @@ route.post("/fhir", async (req, res, next) => {
   res.set("content-type", request.headers.get("content-type"));
   res.set("x-powered-by", process.env.POWERED_BY);
   return res.status(request.status).send(responseText);
-});
-
-//history
-route.get("/fhir/:resource/:id/_history/*", async (req, res, next) => {
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
-  const checkResource = verfiedScopes.findIndex(
-    (privilage) =>
-      privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
-  );
-
-  if (checkResource !== -1 && verfiedScopes[checkResource].privilages.read) {
-    let queryStrings = "";
-    if (req.query) {
-      const splitOriginalUrl = req.originalUrl.split("?");
-      if (splitOriginalUrl[1]) {
-        queryStrings = `?${splitOriginalUrl[1]}`;
-      }
-    }
-
-    const headers = new Headers();
-    headers.set("content-type", req.headers["content-type"]);
-    headers.set("accept", req.headers["accept"]);
-
-    let endpoint = `${fhirEndpoint}/${req.params.resource}/${req.params.id}/_history${queryStrings}`;
-
-    const request = await fetch(endpoint, {
-      method: "GET",
-      headers: headers,
-    });
-
-    const responseText = await request.text();
-    res.set("content-type", request.headers.get("content-type"));
-    res.set("x-powered-by", process.env.POWERED_BY);
-    return res.status(request.status).send(responseText);
-  }
-
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
-});
-
-route.get("/fhir/:resource/_history", async (req, res, next) => {
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
-  const checkResource = verfiedScopes.findIndex(
-    (privilage) =>
-      privilage.resource.toLowerCase() === req.params.resource.toLowerCase()
-  );
-
-  if (checkResource !== -1 && verfiedScopes[checkResource].privilages.search) {
-    let queryStrings = "";
-    if (req.query) {
-      const splitOriginalUrl = req.originalUrl.split("?");
-      if (splitOriginalUrl[1]) {
-        queryStrings = `?${splitOriginalUrl[1]}`;
-      }
-    }
-
-    const headers = new Headers();
-    headers.set("content-type", req.headers["content-type"]);
-    headers.set("accept", req.headers["accept"]);
-
-    let endpoint = `${fhirEndpoint}/${req.params.resource}/_history${queryStrings}`;
-
-    const request = await fetch(endpoint, {
-      method: "GET",
-      headers: headers,
-    });
-
-    const responseText = await request.text();
-    res.set("content-type", request.headers.get("content-type"));
-    res.set("x-powered-by", process.env.POWERED_BY);
-    return res.status(request.status).send(responseText);
-  }
-
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
-});
-
-route.get("/fhir/_history", async (req, res, next) => {
-  const verfiedScopes = await verifyScopes(res.locals.scopes);
-
-  let queryStrings = "";
-  if (req.query) {
-    const splitOriginalUrl = req.originalUrl.split("?");
-    if (splitOriginalUrl[1]) {
-      queryStrings = `?${splitOriginalUrl[1]}`;
-    }
-  }
-
-  const headers = new Headers();
-  // set the contet type to JSON by default because only json is currently supported
-  // headers.set("content-type", req.headers['content-type'])
-  // headers.set("accept", req.headers['accept'])
-  headers.set("content-type", "application/fhir+json; charset=utf-8");
-  headers.set("accept", "application/fhir+json; charset=utf-8");
-
-  let endpoint = `${fhirEndpoint}/_history${queryStrings}`;
-  const request = await fetch(endpoint, {
-    method: "GET",
-    headers: headers,
-  });
-
-  // TODO: Currently only json responses are supported, support for xml return should be added
-  try {
-    // parse the bundle and remove all non privilaged types
-    const responseBundle: { entry?: [{ resource: { resourceType: string } }] } =
-      await request.json();
-    for (let index = 0; index < responseBundle.entry.length; index++) {
-      const element = responseBundle.entry[index];
-      const checkResource = verfiedScopes.findIndex(
-        (privilage) =>
-          privilage.resource.toLowerCase() ===
-          element.resource.resourceType.toLowerCase()
-      );
-      if (
-        checkResource === -1 ||
-        !verfiedScopes[checkResource].privilages.search
-      ) {
-        responseBundle.entry.splice(index, 1);
-      }
-    }
-
-    res.set("content-type", request.headers.get("content-type"));
-    res.set("x-powered-by", process.env.POWERED_BY);
-
-    return res.status(request.status).send(responseBundle);
-  } catch (error) {
-    const operationOutcome = throwOperationOutcome(
-      "fatal",
-      "security",
-      "the client does not have the permission to perform this action"
-    );
-    return res.status(401).json(operationOutcome);
-  }
 });
 
 export { route as fhirRoutes };
