@@ -25,7 +25,7 @@ app.use(wellKnownRoute);
 app.use(oauthRoutes);
 app.use(keysRoute);
 app.use("/api", clientRoutes);
-app.use(userRoutes);
+app.use("/user", userRoutes);
 app.use("/api", resourceRoutes);
 app.use("/fhir", fhirRoutes);
 
