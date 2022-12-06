@@ -20,7 +20,7 @@ export const passportAuth = (passport) => {
         return done(user.toJSON(), false);
       }
       if (user) {
-        return done(null, user);
+        return done(null, user.data.user.map.get("id"));
       } else {
         return done(null, false);
       }
