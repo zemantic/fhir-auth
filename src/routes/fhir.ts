@@ -1,8 +1,11 @@
 import { Router } from "express";
 import { verifyJwt, verifyScopes } from "../auth/authentication";
 import fetch from "node-fetch";
-import { throwOperationOutcome } from "../helpers/fhirResources/operationOutcome";
 import { getClientById } from "../controllers/clients";
+import {
+  OperationOutcome,
+  Issue,
+} from "../helpers/fhirResources/operationOutcome";
 
 const route = Router();
 let fhirEndpoint;
@@ -15,21 +18,23 @@ route.all("/*", async (req, res, next) => {
     return res.status(verify.status).json(verify);
   }
   if (!verify.data.scopes) {
-    const operationOutcome = throwOperationOutcome(
-      "fatal",
-      "security",
-      "invalid authorization scopes provided"
-    );
-    return res.status(401).json(operationOutcome);
+    const operationOutcome = new OperationOutcome();
+    const issue = new Issue();
+    issue.sevierity = "fatal";
+    issue.code = "security";
+    issue.diagnostics = "invalid authorization scopes provided";
+    operationOutcome.issue = [issue];
+    return res.status(401).json(operationOutcome.throwOperationOutcome());
   }
   if (!verify.data.clientId) {
-    const operationOutcome = throwOperationOutcome(
-      "fatal",
-      "security",
-      "invalid clientId or client does not exists, please contact administrator"
-    );
-
-    return res.status(401).json(operationOutcome);
+    const operationOutcome = new OperationOutcome();
+    const issue = new Issue();
+    issue.sevierity = "fatal";
+    issue.code = "security";
+    issue.diagnostics =
+      "invalid clientId or client does not exists, please contact administrator";
+    operationOutcome.issue = [issue];
+    return res.status(401).json(operationOutcome.throwOperationOutcome());
   }
 
   const client = await getClientById(verify.data.clientId);
@@ -79,12 +84,13 @@ route.get("/:resource/([$]):operator", async (req, res, next) => {
     return res.status(request.status).send(responseText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 route.get("/:resource/:id/([$]):operator", async (req, res, next) => {
@@ -126,12 +132,13 @@ route.get("/:resource/:id/([$]):operator", async (req, res, next) => {
     return res.status(request.status).send(responseText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 route.post("/:resource/([$]):operator", async (req, res, next) => {
@@ -174,12 +181,14 @@ route.post("/:resource/([$]):operator", async (req, res, next) => {
     return res.status(request.status).send(responseText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 route.post("/:resource/:id/([$]):operator", async (req, res, next) => {
@@ -222,12 +231,14 @@ route.post("/:resource/:id/([$]):operator", async (req, res, next) => {
     return res.status(request.status).send(responseText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 // misc
@@ -284,13 +295,14 @@ route.get("/:resource/:id/_history", async (req, res, next) => {
     res.set("x-powered-by", process.env.POWERED_BY);
     return res.status(request.status).send(responseText);
   }
-
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 route.get("/:resource/_history", async (req, res, next) => {
@@ -329,12 +341,14 @@ route.get("/:resource/_history", async (req, res, next) => {
     return res.status(request.status).send(responseText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 route.get("/:resource/_search", async (req, res, next) => {
@@ -374,12 +388,14 @@ route.get("/:resource/_search", async (req, res, next) => {
     return res.status(request.status).send(responseText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 route.get("/_history", async (req, res, next) => {
@@ -434,12 +450,14 @@ route.get("/_history", async (req, res, next) => {
 
     return res.status(request.status).send(responseBundle);
   } catch (error) {
-    const operationOutcome = throwOperationOutcome(
-      "fatal",
-      "security",
-      "the client does not have the permission to perform this action"
-    );
-    return res.status(401).json(operationOutcome);
+    const operationOutcome = new OperationOutcome();
+    const issue = new Issue();
+    issue.sevierity = "fatal";
+    issue.code = "security";
+    issue.diagnostics =
+      "the client does not have the permission to perform this action";
+    operationOutcome.issue = [issue];
+    return res.status(401).json(operationOutcome.throwOperationOutcome());
   }
 });
 
@@ -482,12 +500,14 @@ route.get("/:resource/:id", async (req, res, next) => {
     return res.status(request.status).send(requestText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 // vread
@@ -526,12 +546,14 @@ route.get("/:resource/:id/_history/:vid", async (req, res, next) => {
     return res.status(request.status).send(requestText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 // update
@@ -581,12 +603,14 @@ route.put("/:resource/:id", async (req, res, next) => {
 
     return res.status(request.status).send(requestText);
   }
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 // patch
@@ -633,12 +657,14 @@ route.patch("/:resource/:id", async (req, res, next) => {
     res.set("x-powered-by", process.env.POWERED_BY);
     return res.status(request.status).send(requestText);
   }
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 // delete
@@ -676,12 +702,14 @@ route.delete("/:resource/:id", async (req, res, next) => {
     res.set("x-powered-by", process.env.POWERED_BY);
     return res.status(request.status).send(responseText);
   }
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 // create
@@ -731,12 +759,14 @@ route.post("/:resource", async (req, res, nex) => {
     res.set("x-powered-by", process.env.POWERED_BY);
     return res.status(request.status).send(responseText);
   }
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 // search
@@ -793,12 +823,14 @@ route.post("/:resource/_search", async (req, res, next) => {
     return res.status(request.status).send(responseText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 route.get("/:resource", async (req, res, next) => {
@@ -836,12 +868,14 @@ route.get("/:resource", async (req, res, next) => {
     return res.status(request.status).send(responseText);
   }
 
-  const operationOutcome = throwOperationOutcome(
-    "fatal",
-    "security",
-    "the client does not have the permission to perform this action"
-  );
-  return res.status(401).json(operationOutcome);
+  const operationOutcome = new OperationOutcome();
+  const issue = new Issue();
+  issue.sevierity = "fatal";
+  issue.code = "security";
+  issue.diagnostics =
+    "the client does not have the permission to perform this action";
+  operationOutcome.issue = [issue];
+  return res.status(401).json(operationOutcome.throwOperationOutcome());
 });
 
 route.get("/", async (req, res, next) => {
@@ -886,34 +920,40 @@ route.get("/", async (req, res, next) => {
       res.set("powered-by", process.env.POWERED_BY);
       return res.status(request.status).send(responseText);
     } else {
-      const operationOutcome = throwOperationOutcome(
-        "fatal",
-        "security",
-        "the client does not have the permission to perform this action"
-      );
-      return res.status(401).json(operationOutcome);
+      const operationOutcome = new OperationOutcome();
+      const issue = new Issue();
+      issue.sevierity = "fatal";
+      issue.code = "security";
+      issue.diagnostics =
+        "the client does not have the permission to perform this action";
+      operationOutcome.issue = [issue];
+      return res.status(401).json(operationOutcome.throwOperationOutcome());
     }
   } else {
     const client = await getClientById(res.locals.clientId);
     const globalSearch = client.data.client.enableGlobalSearch;
     if (!globalSearch) {
-      const operationOutcome = throwOperationOutcome(
-        "fatal",
-        "security",
-        "the client does not have the permission to perform this action"
-      );
-      return res.status(401).json(operationOutcome);
+      const operationOutcome = new OperationOutcome();
+      const issue = new Issue();
+      issue.sevierity = "fatal";
+      issue.code = "security";
+      issue.diagnostics =
+        "the client does not have the permission to perform this action";
+      operationOutcome.issue = [issue];
+      return res.status(401).json(operationOutcome.throwOperationOutcome());
     }
 
     const splitOriginalUrl = req.originalUrl.split("?");
     if (splitOriginalUrl[1]) {
     } else {
-      const operationOutcome = throwOperationOutcome(
-        "fatal",
-        "security",
-        "the client does not have the permission to perform this action"
-      );
-      return res.status(401).json(operationOutcome);
+      const operationOutcome = new OperationOutcome();
+      const issue = new Issue();
+      issue.sevierity = "fatal";
+      issue.code = "security";
+      issue.diagnostics =
+        "the client does not have the permission to perform this action";
+      operationOutcome.issue = [issue];
+      return res.status(401).json(operationOutcome.throwOperationOutcome());
     }
   }
 });
@@ -937,21 +977,25 @@ route.get("/:compartmant/:id/:type", async (req, res, next) => {
     checkCompartmant === -1 ||
     !verfiedScopes[checkCompartmant].privilages.search
   ) {
-    const operationOutcome = throwOperationOutcome(
-      "fatal",
-      "security",
-      "the client does not have the permission to perform this action"
-    );
-    return res.status(401).json(operationOutcome);
+    const operationOutcome = new OperationOutcome();
+    const issue = new Issue();
+    issue.sevierity = "fatal";
+    issue.code = "security";
+    issue.diagnostics =
+      "the client does not have the permission to perform this action";
+    operationOutcome.issue = [issue];
+    return res.status(401).json(operationOutcome.throwOperationOutcome());
   }
 
   if (checkResource === -1 || !verfiedScopes[checkResource].privilages.search) {
-    const operationOutcome = throwOperationOutcome(
-      "fatal",
-      "security",
-      "the client does not have the permission to perform this action"
-    );
-    return res.status(401).json(operationOutcome);
+    const operationOutcome = new OperationOutcome();
+    const issue = new Issue();
+    issue.sevierity = "fatal";
+    issue.code = "security";
+    issue.diagnostics =
+      "the client does not have the permission to perform this action";
+    operationOutcome.issue = [issue];
+    return res.status(401).json(operationOutcome.throwOperationOutcome());
   }
 
   let queryStrings = "";
@@ -983,12 +1027,14 @@ route.post("/", async (req, res, next) => {
   const client = await getClientById(res.locals.clientId);
   const batchRequestEnabled = client.data.client.enableBatchRequests;
   if (!batchRequestEnabled) {
-    const operationOutcome = throwOperationOutcome(
-      "fatal",
-      "security",
-      "the clinet does not have the permission to perfom this action"
-    );
-    return res.status(401).json(operationOutcome);
+    const operationOutcome = new OperationOutcome();
+    const issue = new Issue();
+    issue.sevierity = "fatal";
+    issue.code = "security";
+    issue.diagnostics =
+      "the client does not have the permission to perform this action";
+    operationOutcome.issue = [issue];
+    return res.status(401).json(operationOutcome.throwOperationOutcome());
   }
 
   let queryStrings = "";

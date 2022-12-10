@@ -1,4 +1,4 @@
-class OperationOutcome {
+export class OperationOutcome {
   private _issue: Array<Issue>;
   public get issue(): Array<Issue> {
     return this._issue;
@@ -7,9 +7,16 @@ class OperationOutcome {
     this._issue = value;
   }
   constructor() {}
+
+  throwOperationOutcome = () => {
+    return {
+      resourceType: "OperationOutcome",
+      issue: this.issue.map((issue) => issue.toJSON()),
+    };
+  };
 }
 
-class Issue {
+export class Issue {
   private _sevierity: string;
   public get sevierity(): string {
     return this._sevierity;
@@ -74,18 +81,13 @@ class Issue {
   }
 
   constructor() {}
-}
 
-export const throwOperationOutcome = (
-  sevierity: string,
-  code: string,
-  diagnostics: string
-) => {
-  const operationOutcome = new OperationOutcome();
-  const issue = new Issue();
-  issue.code = code;
-  issue.diagnostics = diagnostics;
-  issue.sevierity = sevierity;
-  operationOutcome.issue = [issue];
-  return operationOutcome;
-};
+  toJSON() {
+    return {
+      sevierity: this.sevierity,
+      code: this.code,
+      details: this.details,
+      diagnostics: this.diagnostics,
+    };
+  }
+}
