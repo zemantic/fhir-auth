@@ -374,12 +374,18 @@ export const updateClient = async (
   return responseObject;
 };
 
-export const deleteClient = async (id: number, clientId: string) => {
+export const deleteClient = async (
+  id: number,
+  clientId: string,
+  usersId: number
+) => {
   const client = await prisma.clients
     .update({
       where: { id, clientId },
       data: {
         retired: true,
+        usersId: usersId,
+        updatedAt: new Date().toISOString(),
       },
     })
     .catch((e) => {

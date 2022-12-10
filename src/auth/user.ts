@@ -20,13 +20,6 @@ export const authenticateUser = async (email: string, password: string) => {
 
   const responseObject = new ResponseClass();
 
-  if (!user) {
-    responseObject.status = 404;
-    responseObject.message = `no user found`;
-    responseObject.data = null;
-    return responseObject;
-  }
-
   if (user instanceof Error) {
     responseObject.status = 500;
     responseObject.data = {
@@ -36,10 +29,17 @@ export const authenticateUser = async (email: string, password: string) => {
     return responseObject;
   }
 
+  if (!user) {
+    responseObject.status = 404;
+    responseObject.message = `no user found`;
+    responseObject.data = null;
+    return responseObject;
+  }
+
   const validate = await bcrypt.compare(password, user.password);
 
   if (validate) {
-    const jwtSecretObject = new TextEncoder().encode(process.env.JWT_KEY);
+    const jwtSecretObject = new TextEncoder().encode(process.env.USER_JWT_KEY);
     const jwt = await new jose.SignJWT({ userId: Number(user.id) })
       .setExpirationTime("2h")
       .setIssuedAt(Date.now())
@@ -48,6 +48,7 @@ export const authenticateUser = async (email: string, password: string) => {
 
     responseObject.data = {
       user: {
+        name: user.name,
         email: email,
         id: Number(user.id),
       },
@@ -58,7 +59,7 @@ export const authenticateUser = async (email: string, password: string) => {
     responseObject.status = 200;
     responseObject.message = `user authenticated`;
   } else {
-    responseObject.status = 403;
+    responseObject.status = 400;
     responseObject.data = null;
     responseObject.message = "authentication failed";
   }

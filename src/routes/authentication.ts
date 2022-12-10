@@ -25,12 +25,4 @@ route.post("/oauth/access_token", async (req, res, next) => {
   return res.status(request.status).json(request);
 });
 
-// user authentication route
-route.post("/users/authenticate", async (req, res) => {
-  const email: string = req.body.email;
-  const password: string = req.body.password;
-  const request = await authenticateUser(email, password);
-  return res.status(request.status).json(request);
-});
-
 export { route as oauthRoutes };

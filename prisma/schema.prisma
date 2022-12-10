@@ -60,3 +60,9 @@ model resources {
   isActive         Boolean
   clientPrivilages clientPrivilages[]
 }
+
+model settings {
+  id BigInt @unique @default(autoincrement())
+  key String
+  value String
+}
