@@ -109,3 +109,4 @@ dist
 !.env.vault
 
 keys/
+publicKey.json
