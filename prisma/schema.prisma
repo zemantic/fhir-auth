@@ -18,7 +18,10 @@ model users {
   created_at DateTime  @default(now())
   updated_at DateTime  @default(now())
   is_active  Boolean   @default(true)
-  clients    clients[]
+  updatedFhirServers fhirServers[] @relation("fhirServerUpdatedUser")
+  createdFhirServers fhirServers[] @relation("fhirServerCreatedUser")
+  createdClients clients[] @relation("clientCreatedUser")
+  updatedClients clients[] @relation("clientUpdatedUser")
 }
 
 model clients {
@@ -32,12 +35,30 @@ model clients {
   enableBatchRequests Boolean
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @default(now())
-  users                   users?             @relation(fields: [usersId], references: [id])
   usersId                 BigInt?
   clientPrivilages        clientPrivilages[]
   fhirEndpoint            String
   isActive                Boolean @default(true)
   retired Boolean @default(false)
+  createdBy users @relation("clientCreatedUser", fields: [createdUserId], references: [id])
+  updatedBy users @relation("clientUpdatedUser", fields: [updatedUserId], references: [id])
+  createdUserId BigInt
+  updatedUserId BigInt
+}
+
+model fhirServers {
+  id BigInt @default(autoincrement()) @unique
+  serverId String @default(uuid()) @unique
+  fhirServerName String 
+  fhirServerDescription String?
+  fhirServerEndpoint String
+  isActive Boolean @default(true)
+  createdBy users @relation("fhirServerCreatedUser", fields: [createdUserId], references: [id])
+  createdUserId BigInt
+  createdAt DateTime @default(now())
+  updatedBy users @relation("fhirServerUpdatedUser", fields: [updatedUserId], references: [id])
+  updatedUserId BigInt 
+  updatedAt DateTime @default(now())
 }
 
 model clientPrivilages {
