@@ -19,7 +19,7 @@ route.post(
   async (req, res, next) => {
     const clientName: string = req.body.clientName;
     const clientHost: string = req.body.clientHost;
-    const fhirEndpoint: string = req.body.fhirEndpoint;
+    const fhirEndpoint: number = req.body.fhirEndpoint;
     const clientPublicKeyEndpoint: string = req.body.clientPublicKeyEndpoint;
     const privilages = req.body.privilages;
     const isActive = req.body.isActive;
@@ -62,7 +62,7 @@ route.patch(
     const clientsId: number = Number(req.body.clientsId);
     const clientName: string = req.body.clientName;
     const clientHost: string = req.body.clientHost;
-    const fhirEndpoint: string = req.body.fhirEndpoint;
+    const fhirEndpoint: number = Number(req.body.fhirEndpoint);
     const clientPublicKeyEndpoint: string = req.body.clientPublicKeyEndpoint;
     const privilages = req.body.privilages;
     const isActive = req.body.isActive;
