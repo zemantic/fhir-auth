@@ -11,17 +11,17 @@ datasource db {
 }
 
 model users {
-  id         BigInt    @id @unique @default(autoincrement())
-  email      String    @unique
-  name       String
-  password   String
-  created_at DateTime  @default(now())
-  updated_at DateTime  @default(now())
-  is_active  Boolean   @default(true)
+  id                 BigInt        @id @unique @default(autoincrement())
+  email              String        @unique
+  name               String
+  password           String
+  created_at         DateTime      @default(now())
+  updated_at         DateTime      @default(now())
+  is_active          Boolean       @default(true)
   updatedFhirServers fhirServers[] @relation("fhirServerUpdatedUser")
   createdFhirServers fhirServers[] @relation("fhirServerCreatedUser")
-  createdClients clients[] @relation("clientCreatedUser")
-  updatedClients clients[] @relation("clientUpdatedUser")
+  createdClients     clients[]     @relation("clientCreatedUser")
+  updatedClients     clients[]     @relation("clientUpdatedUser")
 }
 
 model clients {
@@ -30,35 +30,37 @@ model clients {
   clientId                String             @unique @default(uuid())
   clientHost              String
   clientPublicKeyEndpoint String
-  clientDescription String
-  enableGlobalSearch Boolean
-  enableBatchRequests Boolean
+  clientDescription       String
+  enableGlobalSearch      Boolean
+  enableBatchRequests     Boolean
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @default(now())
-  usersId                 BigInt?
   clientPrivilages        clientPrivilages[]
-  fhirEndpoint            String
-  isActive                Boolean @default(true)
-  retired Boolean @default(false)
-  createdBy users @relation("clientCreatedUser", fields: [createdUserId], references: [id])
-  updatedBy users @relation("clientUpdatedUser", fields: [updatedUserId], references: [id])
-  createdUserId BigInt
-  updatedUserId BigInt
+  fhirServer              fhirServers        @relation(fields: [fhirServersId], references: [id])
+  isActive                Boolean            @default(true)
+  retired                 Boolean            @default(false)
+  createdBy               users              @relation("clientCreatedUser", fields: [createdUserId], references: [id])
+  updatedBy               users              @relation("clientUpdatedUser", fields: [updatedUserId], references: [id])
+  createdUserId           BigInt
+  updatedUserId           BigInt
+  fhirServersId           BigInt
 }
 
 model fhirServers {
-  id BigInt @default(autoincrement()) @unique
-  serverId String @default(uuid()) @unique
-  fhirServerName String 
+  id                    BigInt    @unique @default(autoincrement())
+  serverId              String    @unique @default(uuid())
+  fhirServerName        String
   fhirServerDescription String?
-  fhirServerEndpoint String
-  isActive Boolean @default(true)
-  createdBy users @relation("fhirServerCreatedUser", fields: [createdUserId], references: [id])
-  createdUserId BigInt
-  createdAt DateTime @default(now())
-  updatedBy users @relation("fhirServerUpdatedUser", fields: [updatedUserId], references: [id])
-  updatedUserId BigInt 
-  updatedAt DateTime @default(now())
+  fhirServerEndpoint    String
+  isActive              Boolean   @default(true)
+  retired               Boolean   @default(false)
+  createdBy             users     @relation("fhirServerCreatedUser", fields: [createdUserId], references: [id])
+  createdUserId         BigInt
+  createdAt             DateTime  @default(now())
+  updatedBy             users     @relation("fhirServerUpdatedUser", fields: [updatedUserId], references: [id])
+  updatedUserId         BigInt
+  updatedAt             DateTime  @default(now())
+  clients               clients[]
 }
 
 model clientPrivilages {
@@ -78,12 +80,13 @@ model resources {
   id               BigInt             @unique @default(autoincrement())
   resourceName     String
   fhirVersion      Decimal
+  maturityStatus   Int
   isActive         Boolean
   clientPrivilages clientPrivilages[]
 }
 
 model settings {
-  id BigInt @unique @default(autoincrement())
-  key String
+  id    BigInt @unique @default(autoincrement())
+  key   String
   value String
 }
