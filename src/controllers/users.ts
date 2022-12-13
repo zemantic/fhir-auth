@@ -32,53 +32,60 @@ export const createUser = async (
   email: string,
   password: string
 ) => {
-  const hashPassword = await bcrypt.hash(
-    password,
-    Number(process.env.SALT_ROUNDS)
-  );
+  try {
+    const hashPassword = await bcrypt.hash(
+      password,
+      Number(process.env.SALT_ROUNDS)
+    );
 
-  const newUser = await prisma.users
-    .create({
-      data: {
-        name,
-        email,
-        password: hashPassword,
-      },
-    })
-    .catch((e) => {
-      return new Error(e);
-    })
-    .finally(async () => {
-      await prisma.$disconnect();
-    });
-
-  const responseObject = new ResponseClass();
-
-  if (newUser instanceof Error) {
-    responseObject.status = 500;
-    responseObject.message = `error creating user ${newUser.message}`;
-    responseObject.data = null;
-    return responseObject;
-  }
-
-  if (newUser) {
-    return {
-      status: 200,
-      data: {
-        user: {
-          id: Number(newUser.id),
-          name: newUser.name,
-          email: newUser.email,
+    const newUser = await prisma.users
+      .create({
+        data: {
+          name,
+          email,
+          password: hashPassword,
         },
-      },
-      message: `new user created, user id - ${newUser.id}`,
-    };
-  } else {
-    return {
-      status: 400,
-      data: null,
-      message: "an error occred when creating a new user, user not created",
-    };
+      })
+      .catch((e) => {
+        return new Error(e);
+      })
+      .finally(async () => {
+        await prisma.$disconnect();
+      });
+
+    const responseObject = new ResponseClass();
+
+    if (newUser instanceof Error) {
+      responseObject.status = 500;
+      responseObject.message = `error creating user ${newUser.message}`;
+      responseObject.data = null;
+      return responseObject;
+    }
+
+    if (newUser) {
+      return {
+        status: 200,
+        data: {
+          user: {
+            id: Number(newUser.id),
+            name: newUser.name,
+            email: newUser.email,
+          },
+        },
+        message: `new user created, user id - ${newUser.id}`,
+      };
+    } else {
+      return {
+        status: 400,
+        data: null,
+        message: "an error occred when creating a new user, user not created",
+      };
+    }
+  } catch (error) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 500;
+    responseObject.data = error;
+    responseObject.message = `an unexpected error occured`;
   }
 };
 
