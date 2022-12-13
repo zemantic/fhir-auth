@@ -9,6 +9,7 @@ import { userRoutes } from "./routes/users";
 import { resourceRoutes } from "./routes/resources";
 import { fhirRoutes } from "./routes/fhir";
 import { fhirServerRoutes } from "./routes/fhirServer";
+import morgan from "morgan";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ const port = process.env.PORT || 3000;
 const app = express();
 
 app.use(cors());
+app.use(morgan("combined"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.json({ type: "application/fhir+json" }));
