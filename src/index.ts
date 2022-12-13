@@ -8,6 +8,7 @@ import { clientRoutes } from "./routes/clients";
 import { userRoutes } from "./routes/users";
 import { resourceRoutes } from "./routes/resources";
 import { fhirRoutes } from "./routes/fhir";
+import { fhirServerRoutes } from "./routes/fhirServer";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use(keysRoute);
 app.use("/api", clientRoutes);
 app.use("/user", userRoutes);
 app.use("/api", resourceRoutes);
+app.use("/api", fhirServerRoutes);
 app.use("/fhir", fhirRoutes);
 
 app.get("/", (req, res) => {
