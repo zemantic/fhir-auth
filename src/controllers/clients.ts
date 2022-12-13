@@ -13,7 +13,9 @@ class ClientClass {
   constructor(params) {
     const map: Map<string, any> = new Map(Object.entries(params));
     map.set("id", Number(map.get("id")));
-    map.set("usersId", Number(map.get("usersId")));
+    map.set("createdUserId", Number(map.get("createdUserId")));
+    map.set("updatedUserId", Number(map.get("updatedUserId")));
+    map.set("fhirServersId", Number(map.get("fhirServersId")));
     this.map = map;
 
     const privilages: Array<any> = this.map.get("clientPrivilages");
@@ -58,7 +60,7 @@ export const createClient = async (
       search: boolean;
     };
   }>,
-  fhirEndpoint: string,
+  fhirEndpoint: number,
   isActive: boolean
 ) => {
   const newClient = await prisma.clients
@@ -67,8 +69,9 @@ export const createClient = async (
         clientName,
         clientHost,
         clientPublicKeyEndpoint,
-        usersId,
-        fhirEndpoint,
+        createdUserId: usersId,
+        updatedUserId: usersId,
+        fhirServersId: fhirEndpoint,
         isActive: isActive,
         clientDescription,
         enableBatchRequests: batchRequests,
@@ -158,7 +161,7 @@ export const createClient = async (
       clientHost: newClient.clientHost,
       clientPublicKeyEndpoint: newClient.clientPublicKeyEndpoint,
       createdAt: newClient.createdAt,
-      createdBy: Number(newClient.usersId),
+      createdBy: Number(newClient.createdUserId),
     },
     privilages: privilages,
   };
@@ -241,7 +244,7 @@ export const updateClient = async (
       search: boolean;
     };
   }>,
-  fhirEndpoint: string,
+  fhirEndpoint: number,
   isActive: boolean
 ) => {
   const updateClient = await prisma.clients
@@ -255,8 +258,8 @@ export const updateClient = async (
         clientPublicKeyEndpoint,
         clientDescription,
         updatedAt: new Date().toISOString(),
-        usersId,
-        fhirEndpoint,
+        updatedUserId: usersId,
+        fhirServersId: fhirEndpoint,
         isActive,
         enableBatchRequests: batchRequests,
         enableGlobalSearch: globalSearch,
@@ -384,7 +387,7 @@ export const deleteClient = async (
       where: { id, clientId },
       data: {
         retired: true,
-        usersId: usersId,
+        updatedUserId: usersId,
         updatedAt: new Date().toISOString(),
       },
     })
@@ -475,6 +478,13 @@ export const getAllClients = async (skip: number, take: number) => {
       take,
       where: {
         retired: false,
+      },
+      include: {
+        fhirServer: {
+          select: {
+            fhirServerEndpoint: true,
+          },
+        },
       },
     })
     .catch((e) => {
