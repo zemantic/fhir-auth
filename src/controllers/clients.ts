@@ -176,6 +176,12 @@ export const readClient = async (clientId: string) => {
         clientId,
       },
       include: {
+        fhirServer: {
+          select: {
+            fhirServerEndpoint: true,
+            fhirServerName: true,
+          },
+        },
         clientPrivilages: {
           include: {
             resource: {
@@ -206,6 +212,11 @@ export const readClient = async (clientId: string) => {
     return responseObject;
   }
 
+  if (client.retired === true) {
+    responseObject.status = 410;
+    responseObject.data = null;
+    responseObject.message = `client deleted on ${client.updatedAt}`;
+  }
   if (client === null) {
     responseObject.status = 404;
     responseObject.message = `no client found for client_id ${clientId}`;
@@ -247,6 +258,37 @@ export const updateClient = async (
   fhirEndpoint: number,
   isActive: boolean
 ) => {
+  const checkClient = await prisma.clients
+    .findUnique({
+      where: {
+        id: clientsId,
+      },
+    })
+    .catch((e) => {
+      return new Error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+
+  if (checkClient instanceof Error) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 500;
+    responseObject.data = {
+      error: checkClient,
+    };
+    responseObject.message = checkClient.message;
+    return responseObject;
+  }
+
+  if (checkClient.retired === true) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 410;
+    responseObject.data = null;
+    responseObject.message = `the with id ${checkClient.clientId} client was deleted on ${checkClient.updatedAt}`;
+    return responseObject;
+  }
+
   const updateClient = await prisma.clients
     .update({
       where: {
@@ -289,7 +331,7 @@ export const updateClient = async (
   if (updateClient instanceof Error) {
     responseObject.status = 500;
     responseObject.data = {
-      error: updateClient.message,
+      error: updateClient,
     };
     responseObject.message = updateClient.message;
     return responseObject;
@@ -427,6 +469,14 @@ export const getClientById = async (id: number) => {
       where: {
         id,
       },
+      include: {
+        fhirServer: {
+          select: {
+            fhirServerEndpoint: true,
+            fhirServerName: true,
+          },
+        },
+      },
     })
     .catch((e) => {
       throw e;
@@ -474,7 +524,7 @@ export const getClientByClientId = async (clientId: string) => {
 export const getAllClients = async (skip: number, take: number) => {
   const clients = await prisma.clients
     .findMany({
-      skip,
+      skip: skip * take,
       take,
       where: {
         retired: false,
@@ -497,7 +547,9 @@ export const getAllClients = async (skip: number, take: number) => {
   if (clients instanceof Error) {
     const responseObject = new ResponseClass();
     responseObject.status = 500;
-    responseObject.data = null;
+    responseObject.data = {
+      error: clients,
+    };
     responseObject.message = clients.message;
     return responseObject;
   }
@@ -518,5 +570,68 @@ export const getAllClients = async (skip: number, take: number) => {
   };
   responseObject.message = `${tempClients.length} client[s] fetched`;
 
+  return responseObject;
+};
+
+export const searchClient = async (query: string) => {
+  const clients = await prisma.clients
+    .findMany({
+      where: {
+        OR: [
+          {
+            clientDescription: {
+              startsWith: query,
+            },
+          },
+          {
+            clientName: {
+              startsWith: query,
+            },
+          },
+        ],
+        AND: {
+          retired: false,
+        },
+      },
+      include: {
+        fhirServer: {
+          select: {
+            fhirServerEndpoint: true,
+          },
+        },
+      },
+    })
+    .catch((e) => {
+      return new Error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+
+  if (clients instanceof Error) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 500;
+    responseObject.data = {
+      error: clients,
+    };
+    responseObject.message = clients.message;
+    return responseObject;
+  }
+
+  const tempClients: ClientClass[] = [];
+
+  clients.forEach((client) => {
+    const tempClient = new ClientClass(client);
+    tempClients.push(tempClient);
+  });
+
+  const responseObject = new ResponseClass();
+  responseObject.status = 200;
+  responseObject.data = {
+    clients: tempClients,
+    query,
+    results: tempClients.length,
+  };
+  responseObject.message = `${tempClients.length} client[s] found`;
   return responseObject;
 };
