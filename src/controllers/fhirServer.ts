@@ -66,11 +66,11 @@ export const createFhirServer = async (
   return responseObject;
 };
 
-export const readFhirServer = async (id: number) => {
+export const readFhirServer = async (serverId: string) => {
   const fhirServer = await prisma.fhirServers
     .findUnique({
       where: {
-        id,
+        serverId,
       },
     })
     .catch((e) => {
@@ -94,7 +94,7 @@ export const readFhirServer = async (id: number) => {
     const responseObject = new ResponseClass();
     responseObject.status = 404;
     responseObject.data = null;
-    responseObject.message = `no fhir server found for ${id}`;
+    responseObject.message = `no fhir server found for ${serverId}`;
     return responseObject;
   }
 
@@ -108,7 +108,7 @@ export const readFhirServer = async (id: number) => {
 
   const responseObject = new ResponseClass();
   responseObject.status = 200;
-  responseObject.message = `fhir server found for ID ${id}`;
+  responseObject.message = `fhir server found for ID ${serverId}`;
   responseObject.data = {
     fhirServer: new FhirServerClass(fhirServer),
   };
@@ -116,13 +116,13 @@ export const readFhirServer = async (id: number) => {
 };
 
 export const updateFhirServer = async (
-  id: number,
+  serverId: string,
   userId: number,
   fhirServerName?: string,
   fhirServerDescription?: string,
   fhirServerEndpoint?: string
 ) => {
-  const checkFhirServer = await readFhirServer(id);
+  const checkFhirServer = await readFhirServer(serverId);
 
   if (checkFhirServer.status !== 200) {
     return checkFhirServer;
@@ -131,7 +131,7 @@ export const updateFhirServer = async (
   const fhirServer = await prisma.fhirServers
     .update({
       where: {
-        id,
+        serverId,
       },
       data: {
         fhirServerName,
@@ -167,8 +167,8 @@ export const updateFhirServer = async (
   return responseObject;
 };
 
-export const deleteFhirServer = async (id: number, userId: number) => {
-  const checkFhirServer = await readFhirServer(id);
+export const deleteFhirServer = async (serverId: string, userId: number) => {
+  const checkFhirServer = await readFhirServer(serverId);
   if (checkFhirServer.status !== 200) {
     return checkFhirServer;
   }
@@ -176,7 +176,7 @@ export const deleteFhirServer = async (id: number, userId: number) => {
   const fhirServer = await prisma.fhirServers
     .update({
       where: {
-        id,
+        serverId,
       },
       data: {
         retired: true,

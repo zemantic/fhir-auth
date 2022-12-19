@@ -17,8 +17,8 @@ route.get(
   "/fhir-server/:id",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    const id: number = Number(req.params.id);
-    const request = await readFhirServer(id);
+    const serverId: string = req.params.id;
+    const request = await readFhirServer(serverId);
     return res.status(request.status).json(request);
   }
 );
@@ -47,9 +47,9 @@ route.delete(
   "/fhir-server/:id",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    const id: number = Number(req.params.id);
+    const serverId: string = req.params.id;
     const userId: number = req.user;
-    const request = await deleteFhirServer(id, userId);
+    const request = await deleteFhirServer(serverId, userId);
     return res.status(request.status).json(request);
   }
 );
@@ -58,14 +58,14 @@ route.patch(
   "/fhir-server/:id",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    const id: number = Number(req.params.id);
+    const serverId: string = req.params.id;
     const fhirServerName: string = req.body.fhirServerName;
     const fhirServerEndpoint: string = req.body.fhirServerEndpoint;
     const fhirServerDescription: string = req.body.fhirServerDescription;
     const userId: number = req.user;
 
     const request = await updateFhirServer(
-      id,
+      serverId,
       userId,
       fhirServerName,
       fhirServerDescription,
