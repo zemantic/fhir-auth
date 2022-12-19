@@ -6,6 +6,7 @@ import {
   deleteFhirServer,
   getAllFhirServers,
   readFhirServer,
+  searchFhirServers,
   updateFhirServer,
 } from "../controllers/fhirServer";
 
@@ -83,4 +84,13 @@ route.get(
   }
 );
 
+route.post(
+  "/search-server",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const query: string = req.body.query;
+    const request = await searchFhirServers(query);
+    return res.status(request.status).json(request);
+  }
+);
 export { route as fhirServerRoutes };
