@@ -40,7 +40,7 @@ route.all("/*", async (req, res, next) => {
   const client = await getClientById(verify.data.clientId);
   res.locals.scopes = verify.data.scopes;
   res.locals.clientId = verify.data.clientId;
-  fhirEndpoint = client.data.client.fhirEndpoint;
+  fhirEndpoint = client.data.client.fhirServer.fhirServerEndpoint;
   next();
 });
 
