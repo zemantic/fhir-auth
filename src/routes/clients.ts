@@ -6,6 +6,7 @@ import {
   deleteClient,
   getAllClients,
   readClient,
+  searchClient,
   updateClient,
 } from "../controllers/clients";
 
@@ -104,8 +105,18 @@ route.get(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const skip = Number(req.query.skip);
-    const take = 20;
+    const take = 10;
     const request = await getAllClients(skip, take);
+    return res.status(request.status).json(request);
+  }
+);
+
+route.post(
+  "/search-client",
+  passport.authenticate("jwt", { session: false }),
+  async (req, res, next) => {
+    const query = req.body.query;
+    const request = await searchClient(query);
     return res.status(request.status).json(request);
   }
 );
