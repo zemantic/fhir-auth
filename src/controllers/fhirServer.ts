@@ -98,6 +98,14 @@ export const readFhirServer = async (id: number) => {
     return responseObject;
   }
 
+  if (fhirServer.retired === true) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 410;
+    responseObject.data = null;
+    responseObject.message = `fhir server was deleted on ${fhirServer.updatedAt}`;
+    return responseObject;
+  }
+
   const responseObject = new ResponseClass();
   responseObject.status = 200;
   responseObject.message = `fhir server found for ID ${id}`;
@@ -235,5 +243,59 @@ export const getAllFhirServers = async () => {
     fhirServers: tempFhirServerClasses,
   };
   responseObject.message = `${tempFhirServerClasses.length} fhir servers retrieved successfully`;
+  return responseObject;
+};
+
+export const searchFhirServers = async (query: string) => {
+  const fhirServers = await prisma.fhirServers
+    .findMany({
+      where: {
+        OR: [
+          {
+            fhirServerName: {
+              startsWith: query,
+            },
+          },
+          {
+            fhirServerDescription: {
+              startsWith: query,
+            },
+          },
+        ],
+        AND: {
+          retired: false,
+        },
+      },
+    })
+    .catch((e) => {
+      return new Error(e);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+
+  if (fhirServers instanceof Error) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 500;
+    responseObject.data = {
+      error: fhirServers,
+    };
+    responseObject.message = fhirServers.message;
+    return responseObject;
+  }
+  const tempFhirServers: FhirServerClass[] = [];
+  fhirServers.forEach((server) => {
+    const tempFhirServer = new FhirServerClass(server);
+    tempFhirServers.push(tempFhirServer);
+  });
+
+  const responseObject = new ResponseClass();
+  responseObject.status = 200;
+  responseObject.data = {
+    fhirServers: tempFhirServers,
+    query,
+    results: tempFhirServers.length,
+  };
+  responseObject.message = `${tempFhirServers.length} fhir server[s] found`;
   return responseObject;
 };
