@@ -1,7 +1,7 @@
 {
   "name": "fhir-auth-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "A robust and scalable authentication server for FHIR based on SMART on FHIR standards",
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -13,13 +13,18 @@
     "type": "git",
     "url": "git+https://github.com/zemantic/FHIR-auth-server.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "FHIR",
+    "SMART on FHIR",
+    "HAPI",
+    "HAPI FHIR"
+  ],
+  "author": "Rukshan Ranatunge <rukshan@ruky.me>",
+  "license": "AGPL v3",
   "bugs": {
     "url": "https://github.com/zemantic/FHIR-auth-server/issues"
   },
-  "homepage": "https://github.com/zemantic/FHIR-auth-server#readme",
+  "homepage": "http://zemantic.co/fhir-auth",
   "dependencies": {
     "@prisma/client": "^4.7.1",
     "bcrypt": "^5.1.0",
