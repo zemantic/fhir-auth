@@ -5,7 +5,7 @@ import { authenticationFlow } from "../controllers/authentication";
 const route = Router();
 
 // fhir application authentication route
-route.post("/oauth/access_token", async (req, res, next) => {
+route.post("/access_token", async (req, res, next) => {
   const scope: string = req.body.scope;
   const grant_type: string = req.body.grant_type;
   const client_assertion_type: string = req.body.client_assertion_type;

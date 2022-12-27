@@ -63,15 +63,18 @@ app.use(express.json({ type: "application/fhir+json" }));
 app.use(express.text({ type: "application/fhir+xml" }));
 // load routes
 app.use(wellKnownRoute);
-app.use(oauthRoutes);
+app.use();
 app.use(keysRoute);
+app.use("/oauth", fhirRateLimit);
+app.use("/oauth", oauthRoutes);
 app.use("/api", apiRateLimit);
 app.use("/api", clientRoutes);
-app.use("/user", userRoutes);
 app.use("/api", resourceRoutes);
 app.use("/api", fhirServerRoutes);
 app.use("/fhir", fhirRateLimit);
 app.use("/fhir", fhirRoutes);
+app.use("/user", apiRateLimit);
+app.use("/user", userRoutes);
 
 app.get("/", (req, res) => {
   return res.status(200).json({ msg: `FhIR Auth Server` });
