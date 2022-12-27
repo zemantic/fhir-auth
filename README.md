@@ -11,7 +11,7 @@ FHIR Auth is a SMART on FHIR compatible FHIR authentication and authorization se
 
 FHIR Auth currently support server to server authentication (backend authentication) and it is compatible with HAPI FHIR and many popular FHIR servers.
 
-## Incoporate FHIR Auth to your FHIR server
+## Incoporate FHIR Auth to your FHIR server or institution 
 
 <a href="https://zemantic.co/contact-us"><img src="https://user-images.githubusercontent.com/2173259/209616744-d599016f-9f01-4bc0-bc70-8a881feb1153.png" width="128" /></a>
 
