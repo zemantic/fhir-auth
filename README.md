@@ -5,10 +5,15 @@
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg?style=flat-square)](http://www.gnu.org/licenses/agpl-3.0)
 [![GitHub issues](https://img.shields.io/github/issues/zemantic/fhir-auth?style=flat-square)](https://github.com/zemantic/fhir-auth)
 ![GitHub Repo stars](https://img.shields.io/github/stars/zemantic/fhir-auth?style=flat-square)
+[![Documentation](https://img.shields.io/badge/Documentation-wip-critical?style=flat-square)](https://zemantic.co/docs/fhir-auth)
 
 FHIR Auth is a SMART on FHIR compatible FHIR authentication and authorization server. Register and grant privilages to clients communicating with your orgniazaiton's FHIR servers.
 
 FHIR Auth currently support server to server authentication (backend authentication) and it is compatible with HAPI FHIR and many popular FHIR servers.
+
+## Incoporate FHIR Auth to your FHIR server
+
+<a href="https://zemantic.co/contact-us"><img src="https://user-images.githubusercontent.com/2173259/209616744-d599016f-9f01-4bc0-bc70-8a881feb1153.png" width="128" /></a>
 
 ## Features
 
@@ -20,18 +25,25 @@ FHIR Auth currently support server to server authentication (backend authenticat
 - Grant resrouce level privilages
 
 
+## Documentation
+
+The documentation is still work in progress. Read the full documentation for FHIR Auth - https://zemantic.co/docs/fhir-auth
+
+Help documentation by contributing to [documentation repository](https://github.com/zemantic/fhir-auth-docs)
+
 ## Installation
 
 Installing FHIR Auth on your developer environment
 
 #### Clone the respository and install dependencies
+
 ```bash
 git clone https://github.com/zemantic/FHIR-auth-server
 npm Install
 ```
 
 #### Setting up environment variables
-Change the values of `env_example` as desired. And rename the file as `.env`
+Change the values of `env_example`. And rename the file as `.env`
 
 #### Creating tables 
 
@@ -51,12 +63,6 @@ npm run serve
 ```bash
 npm run build
 ```
-## Documentation
-
-Documentation is still work in progress, feel free to check our documentation page and contribute.
-
-[Documentation](https://linktodocumentation)
-
 
 ## Issues
 
