@@ -1,4 +1,5 @@
-[<img src="https://i.imgur.com/BI0QS2z.png" height="256" width="256" />](https://i.imgur.com/BI0QS2z.png)
+![image](https://user-images.githubusercontent.com/2173259/209614345-8a492e66-d195-458f-8f4d-f356bce54692.png)
+
 
 # FHIR Auth - a SMART on FHIR compatible FHIR authentication server
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg?style=flat-square)](http://www.gnu.org/licenses/agpl-3.0)
