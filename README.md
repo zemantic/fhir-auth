@@ -2,7 +2,7 @@
 
 # FHIR Auth - a SMART on FHIR compatible FHIR authentication server
 [![AGPL License](https://img.shields.io/badge/license-AGPL-blue.svg?style=flat-square)](http://www.gnu.org/licenses/agpl-3.0)
-![GitHub issues](https://img.shields.io/github/issues/zemantic/FHIR-auth-server?style=flat-square)
+[![GitHub issues](https://img.shields.io/github/issues/zemantic/fhir-auth?style=flat-square)](https://github.com/zemantic/fhir-auth)
 
 FHIR Auth is a SMART on FHIR compatible FHIR authentication server following all the standards described on the SMART on FHIR authentication documentation. 
 
