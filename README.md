@@ -13,10 +13,12 @@ FHIT Auth currently support server to server authentication (backend authenticat
 
 ## Features
 
-- Follows SMART on FHIR standards
+- Follows SMART on FHIR security standards
 - FHIR Auth works with all popular FHIR servers, including HAPI FHIR
 - oAuth authentication flow
-- Resrouce level privilages
+- Manage multiple FHIR servers in a single endpoint
+- Registration and managing clients
+- Grant resrouce level privilages
 
 
 ## Installation
