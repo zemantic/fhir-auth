@@ -7,11 +7,11 @@
 ![GitHub Repo stars](https://img.shields.io/github/stars/zemantic/fhir-auth?style=flat-square)
 [![Documentation](https://img.shields.io/badge/Documentation-wip-critical?style=flat-square)](https://zemantic.co/docs/fhir-auth)
 
-FHIR Auth is a SMART on FHIR compatible FHIR authentication and authorization server. Register and grant privilages to clients communicating with your orgniazaiton's FHIR servers.
+FHIR Auth is a SMART on FHIR compatible FHIR authentication and authorization server. A FHIR authorization server validates incoming requests from clients and grant access to the FHIR server according to allocated privilages.
 
 FHIR Auth currently support server to server authentication (backend authentication) and it is compatible with HAPI FHIR and many popular FHIR servers.
 
-## Incoporate FHIR Auth to your FHIR server
+## Incoporate FHIR Auth to your FHIR server or institution 
 
 <a href="https://zemantic.co/contact-us"><img src="https://user-images.githubusercontent.com/2173259/209616744-d599016f-9f01-4bc0-bc70-8a881feb1153.png" width="128" /></a>
 
