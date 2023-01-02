@@ -212,17 +212,19 @@ export const readClient = async (clientId: string) => {
     return responseObject;
   }
 
-  if (client.retired === true) {
-    responseObject.status = 410;
-    responseObject.data = null;
-    responseObject.message = `client deleted on ${client.updatedAt}`;
-  }
   if (client === null) {
     responseObject.status = 404;
     responseObject.message = `no client found for client_id ${clientId}`;
     responseObject.data = {
       client: null,
     };
+    return responseObject;
+  }
+
+  if (client.retired === true) {
+    responseObject.status = 410;
+    responseObject.data = null;
+    responseObject.message = `client deleted on ${client.updatedAt}`;
     return responseObject;
   }
 
