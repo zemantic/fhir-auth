@@ -63,7 +63,6 @@ app.use(express.json({ type: "application/fhir+json" }));
 app.use(express.text({ type: "application/fhir+xml" }));
 // load routes
 app.use(wellKnownRoute);
-app.use();
 app.use(keysRoute);
 app.use("/oauth", fhirRateLimit);
 app.use("/oauth", oauthRoutes);
