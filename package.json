@@ -34,7 +34,7 @@
     "express-rate-limit": "^6.7.0",
     "jose": "^4.11.2",
     "morgan": "^1.10.0",
-    "node-fetch": "^3.2.10",
+    "node-fetch": "^3.3.0",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1"
   },
