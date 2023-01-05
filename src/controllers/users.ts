@@ -63,29 +63,24 @@ export const createUser = async (
     }
 
     if (newUser) {
-      return {
-        status: 200,
-        data: {
-          user: {
-            id: Number(newUser.id),
-            name: newUser.name,
-            email: newUser.email,
-          },
-        },
-        message: `new user created, user id - ${newUser.id}`,
+      responseObject.status = 200;
+      responseObject.data = {
+        user: new UserClass(newUser),
       };
+      responseObject.message = "new user created";
+      return responseObject;
     } else {
-      return {
-        status: 400,
-        data: null,
-        message: "an error occred when creating a new user, user not created",
-      };
+      responseObject.status = 400;
+      responseObject.data = null;
+      responseObject.message = "an error occured when creating user";
+      return responseObject;
     }
   } catch (error) {
     const responseObject = new ResponseClass();
     responseObject.status = 500;
     responseObject.data = error;
     responseObject.message = `an unexpected error occured`;
+    return responseObject;
   }
 };
 
