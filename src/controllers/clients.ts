@@ -283,6 +283,16 @@ export const updateClient = async (
     return responseObject;
   }
 
+  if (!checkClient) {
+    const responseObject = new ResponseClass();
+    responseObject.status = 500;
+    responseObject.data = {
+      error: "client does not exist",
+    };
+    responseObject.message = "cliet does not exists";
+    return responseObject;
+  }
+
   if (checkClient.retired === true) {
     const responseObject = new ResponseClass();
     responseObject.status = 410;
@@ -421,14 +431,10 @@ export const updateClient = async (
   return responseObject;
 };
 
-export const deleteClient = async (
-  id: number,
-  clientId: string,
-  usersId: number
-) => {
+export const deleteClient = async (id: number, usersId: number) => {
   const client = await prisma.clients
     .update({
-      where: { id, clientId },
+      where: { id },
       data: {
         retired: true,
         updatedUserId: usersId,
@@ -452,7 +458,7 @@ export const deleteClient = async (
 
   const responseObject = new ResponseClass();
   responseObject.status = 200;
-  responseObject.message = `client deleted with ID ${id ?? clientId}`;
+  responseObject.message = `client deleted with ID ${id}`;
   responseObject.data = { client: new ClientClass(client) };
   return responseObject;
 };
