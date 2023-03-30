@@ -27,7 +27,7 @@ route.post(
     const clientDescription = req.body.clientDescription;
     const globalSearch = req.body.enableGlobalSearch;
     const batchRequests = req.body.enableBatchRequests;
-    const userId = req.user;
+    const userId = Number(req.user);
 
     const request = await createClient(
       clientName,
@@ -70,7 +70,7 @@ route.patch(
     const clientDescription = req.body.clientDescription;
     const batchRequests = req.body.enableBatchRequests;
     const globalSearch = req.body.enableGlobalSearch;
-    const userId = req.user;
+    const userId = Number(req.user);
 
     const request = await updateClient(
       clientsId,
@@ -94,8 +94,8 @@ route.delete(
   "/client/:clientId",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    const usersId = req.user;
-    const request = await deleteClient(undefined, req.params.clientId, usersId);
+    const usersId = Number(req.user);
+    const request = await deleteClient(Number(req.params.clientId), usersId);
     return res.status(request.status).json(request);
   }
 );
