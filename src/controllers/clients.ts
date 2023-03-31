@@ -1,6 +1,7 @@
 import prisma from "../helpers/prisma";
 import { ResponseClass } from "../helpers/responseClass";
 
+// Basic client class
 class ClientClass {
   private _map: Map<string, any>;
   public get map(): Map<string, any> {
@@ -41,6 +42,21 @@ class ClientClass {
   }
 }
 
+/**
+ * Registers a new fhir client communicating with the fhir server
+ *
+ * @param clientName name of the client
+ * @param clientHost host address of the client
+ * @param clientPublicKeyEndpoint public endpoint url of the client
+ * @param usersId userid of ther user creating the client
+ * @param clientDescription basic description of the client
+ * @param batchRequests whether client accept batch requests
+ * @param globalSearch whether client accept global search
+ * @param privilages fhir resource privilates for the client
+ * @param fhirEndpoint fhir endpoint mapping the client
+ * @param isActive whether client is active or retired
+ * @returns response object with status code 200 with client details if client created or status code if client not created
+ */
 export const createClient = async (
   clientName: string,
   clientHost: string,
@@ -63,6 +79,7 @@ export const createClient = async (
   fhirEndpoint: number,
   isActive: boolean
 ) => {
+  // creates new client in database
   const newClient = await prisma.clients
     .create({
       data: {
@@ -87,6 +104,7 @@ export const createClient = async (
 
   const responseObject = new ResponseClass();
 
+  // if creation was an error return error response class
   if (newClient instanceof Error) {
     responseObject.data = newClient;
     responseObject.message = `error creating new client`;
@@ -94,6 +112,7 @@ export const createClient = async (
     return responseObject;
   }
 
+  // array stroing privilages
   const parsePrivilages: Array<{
     resourcesId: bigint;
     create: boolean;
@@ -104,6 +123,7 @@ export const createClient = async (
     clientsId: bigint;
   }> = [];
 
+  // parse privilages
   privilages.forEach((privilage) => {
     let tempPrivilage: {
       resourcesId: bigint;
@@ -114,13 +134,13 @@ export const createClient = async (
       search: boolean;
       clientsId: bigint;
     } = {
-      resourcesId: BigInt(0),
       create: false,
       read: false,
       update: false,
       delete: false,
       search: false,
       clientsId: BigInt(0),
+      resourcesId: BigInt(0),
     };
 
     tempPrivilage.create = privilage.privilages.create;
@@ -134,6 +154,7 @@ export const createClient = async (
     parsePrivilages.push(tempPrivilage);
   });
 
+  // populate the privilages table with privilage data and link to client
   const createPrivilages = await prisma.clientPrivilages
     .createMany({
       data: parsePrivilages,
@@ -145,6 +166,7 @@ export const createClient = async (
       await prisma.$disconnect();
     });
 
+  // return response object if error creating privilages
   if (createPrivilages instanceof Error) {
     responseObject.status = 500;
     responseObject.data = createPrivilages;
@@ -152,6 +174,7 @@ export const createClient = async (
     return responseObject;
   }
 
+  // if everthing works, return status code 200 with client data
   responseObject.status = 200;
   responseObject.data = {
     client: {
@@ -169,7 +192,13 @@ export const createClient = async (
   return responseObject;
 };
 
+/**
+ *
+ * @param clientId client UUID
+ * @returns responseObject with status code 200, 410, 404 or 500
+ */
 export const readClient = async (clientId: string) => {
+  // find client from database
   const client = await prisma.clients
     .findUnique({
       where: {
@@ -203,6 +232,7 @@ export const readClient = async (clientId: string) => {
 
   const responseObject = new ResponseClass();
 
+  // if error return response object with status code 500
   if (client instanceof Error) {
     responseObject.status = 500;
     responseObject.message = `an unexpected error occred in retrieving client: ${client.message}`;
@@ -212,6 +242,7 @@ export const readClient = async (clientId: string) => {
     return responseObject;
   }
 
+  // if client does not exists resutn responseObject with status code 404
   if (client === null) {
     responseObject.status = 404;
     responseObject.message = `no client found for client_id ${clientId}`;
@@ -221,6 +252,7 @@ export const readClient = async (clientId: string) => {
     return responseObject;
   }
 
+  // if client is deleted return responseObject with status code 410
   if (client.retired === true) {
     responseObject.status = 410;
     responseObject.data = null;
@@ -228,6 +260,7 @@ export const readClient = async (clientId: string) => {
     return responseObject;
   }
 
+  // if client exists, return responseObject with status code 200
   responseObject.status = 200;
   responseObject.data = {
     client: new ClientClass(client),
@@ -236,6 +269,21 @@ export const readClient = async (clientId: string) => {
   return responseObject;
 };
 
+/**
+ *
+ * @param clientsId client id
+ * @param clientName client name
+ * @param clientHost client host
+ * @param clientPublicKeyEndpoint client public key endpoint
+ * @param usersId updating user id
+ * @param clientDescription client description
+ * @param batchRequests whether client accept batch requests
+ * @param globalSearch whether client accept global search parameters
+ * @param privilages client fhir resource priviladges
+ * @param fhirEndpoint fhir server endpoint
+ * @param isActive active or retured
+ * @returns response object with status code 200, 500,
+ */
 export const updateClient = async (
   clientsId: number,
   clientName: string,
@@ -260,6 +308,7 @@ export const updateClient = async (
   fhirEndpoint: number,
   isActive: boolean
 ) => {
+  // search the database for client
   const checkClient = await prisma.clients
     .findUnique({
       where: {
@@ -273,6 +322,7 @@ export const updateClient = async (
       await prisma.$disconnect();
     });
 
+  // return responseObject with status code 500 if error occured
   if (checkClient instanceof Error) {
     const responseObject = new ResponseClass();
     responseObject.status = 500;
@@ -283,16 +333,18 @@ export const updateClient = async (
     return responseObject;
   }
 
+  // return response object with status 404 if client does not exists
   if (!checkClient) {
     const responseObject = new ResponseClass();
-    responseObject.status = 500;
+    responseObject.status = 404;
     responseObject.data = {
       error: "client does not exist",
     };
-    responseObject.message = "cliet does not exists";
+    responseObject.message = `client does not exists for client id ${clientsId}`;
     return responseObject;
   }
 
+  // return responseObject with status code 410 if client is retired
   if (checkClient.retired === true) {
     const responseObject = new ResponseClass();
     responseObject.status = 410;
@@ -301,6 +353,7 @@ export const updateClient = async (
     return responseObject;
   }
 
+  // update client details
   const updateClient = await prisma.clients
     .update({
       where: {
@@ -340,6 +393,7 @@ export const updateClient = async (
 
   const responseObject = new ResponseClass();
 
+  // return responseObject with status code 500 if client update failed
   if (updateClient instanceof Error) {
     responseObject.status = 500;
     responseObject.data = {
@@ -349,13 +403,17 @@ export const updateClient = async (
     return responseObject;
   }
 
+  // add all privilages of the existing client to tobe deleted array
   const toBeDeleted: number[] = [];
 
+  // populate the tobe deleted array with exisiting client privilages
   updateClient.clientPrivilages.forEach((privilage) => {
     toBeDeleted.push(Number(privilage.id));
   });
 
+  // loop through new priviladges
   privilages.forEach(async (privilage) => {
+    // remove updating priviladges from tobedeleted array
     toBeDeleted.splice(toBeDeleted.indexOf(privilage.id), 1);
 
     const findPrivilage = await prisma.clientPrivilages
@@ -372,6 +430,7 @@ export const updateClient = async (
         await prisma.$disconnect();
       });
 
+    // priviladge exists update priviladges
     if (findPrivilage) {
       await prisma.clientPrivilages.update({
         where: {
@@ -386,6 +445,7 @@ export const updateClient = async (
         },
       });
     } else {
+      // if does not exists, create new priviladges
       await prisma.clientPrivilages
         .create({
           data: {
@@ -407,6 +467,7 @@ export const updateClient = async (
     }
   });
 
+  // delete the remaining privialdges of the tobedeleted array
   await prisma.clientPrivilages
     .deleteMany({
       where: {
@@ -422,6 +483,7 @@ export const updateClient = async (
       await prisma.$disconnect();
     });
 
+  // return status code 200 for success
   responseObject.status = 200;
   responseObject.data = {
     client: new ClientClass(updateClient),
@@ -431,7 +493,14 @@ export const updateClient = async (
   return responseObject;
 };
 
+/**
+ *
+ * @param id clientId
+ * @param usersId user deleting the client
+ * @returns response object with status code 200, 500
+ */
 export const deleteClient = async (id: number, usersId: number) => {
+  // find client from database and retire client
   const client = await prisma.clients
     .update({
       where: { id },
@@ -448,6 +517,7 @@ export const deleteClient = async (id: number, usersId: number) => {
       await prisma.$disconnect();
     });
 
+  // if error fetching client return responseobject with status code 200
   if (client instanceof Error) {
     const responseObject = new ResponseClass();
     responseObject.status = 500;
@@ -456,6 +526,8 @@ export const deleteClient = async (id: number, usersId: number) => {
     return responseObject;
   }
 
+  // return responseObject with status code 200 after deleting client
+
   const responseObject = new ResponseClass();
   responseObject.status = 200;
   responseObject.message = `client deleted with ID ${id}`;
@@ -463,6 +535,11 @@ export const deleteClient = async (id: number, usersId: number) => {
   return responseObject;
 };
 
+/**
+ *
+ * @param id clientid
+ * @returns responseObject with status code 404, 200
+ */
 export const getClientById = async (id: number) => {
   if (!id) {
     return {
