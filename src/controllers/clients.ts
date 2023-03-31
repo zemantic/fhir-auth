@@ -499,11 +499,11 @@ export const updateClient = async (
  * @param usersId user deleting the client
  * @returns response object with status code 200, 500
  */
-export const deleteClient = async (id: number, usersId: number) => {
+export const deleteClient = async (clientId: string, usersId: number) => {
   // find client from database and retire client
   const client = await prisma.clients
     .update({
-      where: { id },
+      where: { clientId },
       data: {
         retired: true,
         updatedUserId: usersId,
@@ -530,7 +530,7 @@ export const deleteClient = async (id: number, usersId: number) => {
 
   const responseObject = new ResponseClass();
   responseObject.status = 200;
-  responseObject.message = `client deleted with ID ${id}`;
+  responseObject.message = `client deleted with ID ${clientId}`;
   responseObject.data = { client: new ClientClass(client) };
   return responseObject;
 };

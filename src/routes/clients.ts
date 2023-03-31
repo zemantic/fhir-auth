@@ -46,11 +46,11 @@ route.post(
 );
 
 route.get(
-  "/client/:id",
+  "/client/:clientId",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    const id: string = req.params.id;
-    const request = await readClient(id);
+    const clientId: string = req.params.clientId;
+    const request = await readClient(clientId);
 
     return res.status(request.status).json(request);
   }
@@ -95,7 +95,8 @@ route.delete(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const usersId = Number(req.user);
-    const request = await deleteClient(Number(req.params.clientId), usersId);
+    const clientId: string = req.params.clientId;
+    const request = await deleteClient(clientId, usersId);
     return res.status(request.status).json(request);
   }
 );
