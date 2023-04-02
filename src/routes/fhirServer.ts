@@ -27,7 +27,7 @@ route.post(
   "/fhir-server",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    const userId = req.user;
+    const userId: number = Number(req.user);
     const fhirServerName: string = req.body.fhirServerName;
     const fhirServerDescription: string = req.body.fhirServerDescription;
     const fhirServerEndpoint: string = req.body.fhirServerEndpoint;
@@ -48,7 +48,7 @@ route.delete(
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
     const serverId: string = req.params.id;
-    const userId: number = req.user;
+    const userId: number = Number(req.user);
     const request = await deleteFhirServer(serverId, userId);
     return res.status(request.status).json(request);
   }
@@ -62,7 +62,7 @@ route.patch(
     const fhirServerName: string = req.body.fhirServerName;
     const fhirServerEndpoint: string = req.body.fhirServerEndpoint;
     const fhirServerDescription: string = req.body.fhirServerDescription;
-    const userId: number = req.user;
+    const userId: number = Number(req.user);
 
     const request = await updateFhirServer(
       serverId,
@@ -79,9 +79,7 @@ route.get(
   "/get-all-fhir-servers",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    const take: number = 10;
-    const skip: number = Number(req.query.skip);
-    const request = await getAllFhirServers(skip, take);
+    const request = await getAllFhirServers();
     return res.status(request.status).json(request);
   }
 );
