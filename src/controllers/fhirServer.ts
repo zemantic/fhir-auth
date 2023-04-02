@@ -207,11 +207,9 @@ export const deleteFhirServer = async (serverId: string, userId: number) => {
   return responseObject;
 };
 
-export const getAllFhirServers = async (skip: number, take: number) => {
+export const getAllFhirServers = async () => {
   const fhirServers = await prisma.fhirServers
     .findMany({
-      skip: skip * take,
-      take,
       where: {
         retired: false,
       },
