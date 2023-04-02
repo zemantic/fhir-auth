@@ -13,7 +13,7 @@ route.post(
   "/signup",
   (req, res, next) => {
     if (validateUserSignup(req.body)) {
-      return next;
+      return next();
     } else {
       const responseObject = new ResponseClass();
       responseObject.status = 400;
@@ -39,7 +39,7 @@ route.post(
   "/login",
   (req, res, next) => {
     if (validateUserSignin(req.body)) {
-      return next;
+      return next();
     } else {
       const responseObject = new ResponseClass();
       responseObject.status = 400;
