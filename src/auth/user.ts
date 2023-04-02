@@ -30,7 +30,7 @@ export const authenticateUser = async (email: string, password: string) => {
   }
 
   if (!user) {
-    responseObject.status = 404;
+    responseObject.status = 200;
     responseObject.message = `no user found`;
     responseObject.data = null;
     return responseObject;
