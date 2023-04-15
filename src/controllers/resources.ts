@@ -60,3 +60,71 @@ export const readResources = async (fhirVersion: number) => {
 
   return responseObject;
 };
+
+export const patchResources = async (
+  resources: Array<{
+    resourceName: string;
+    fhirVersion: number;
+    maturityStatus: number;
+    isActive: boolean;
+    id?: number;
+  }>
+) => {
+  try {
+    for (const resource of resources) {
+      const newResource = await prisma.resources
+        .upsert({
+          where: {
+            id: resource.id || 0,
+          },
+          create: {
+            resourceName: resource.resourceName,
+            fhirVersion: resource.fhirVersion,
+            isActive: true,
+            maturityStatus: resource.maturityStatus,
+          },
+          update: {
+            resourceName: resource.resourceName,
+            fhirVersion: resource.fhirVersion,
+            isActive: resource.isActive,
+            maturityStatus: resource.maturityStatus,
+          },
+        })
+        .catch((e) => {
+          return new Error(e);
+        })
+        .finally(async () => {
+          await prisma.$disconnect();
+        });
+
+      if (newResource instanceof Error) {
+        console.log(newResource);
+        const responseObject = new ResponseClass();
+        responseObject.status = 500;
+        responseObject.data = {
+          error: newResource,
+        };
+        responseObject.message =
+          "an error occured when creating fhir resources";
+        return responseObject;
+      }
+    }
+
+    const responseObject = new ResponseClass();
+    responseObject.status = 200;
+    responseObject.message = "resources updated";
+    responseObject.data = {
+      resources,
+    };
+    return responseObject;
+  } catch (error) {
+    console.log(error);
+    const responseObject = new ResponseClass();
+    responseObject.status = 500;
+    responseObject.data = {
+      error: error,
+    };
+    responseObject.message = "an error occured when updating resources";
+    return responseObject;
+  }
+};
