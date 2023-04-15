@@ -29,6 +29,7 @@ export const readResources = async (fhirVersion: number) => {
         fhirVersion,
         isActive: true,
       },
+      orderBy: { resourceName: "asc" },
     })
     .catch((e) => {
       return new Error(e);
