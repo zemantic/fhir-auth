@@ -27,6 +27,7 @@ export const readResources = async (fhirVersion: number) => {
     .findMany({
       where: {
         fhirVersion,
+        isActive: true,
       },
     })
     .catch((e) => {
