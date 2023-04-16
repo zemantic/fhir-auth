@@ -79,9 +79,7 @@ route.get(
   "/get-all-fhir-servers",
   passport.authenticate("jwt", { session: false }),
   async (req, res, next) => {
-    const take: number = 10;
-    const skip: number = Number(req.query.skip);
-    const request = await getAllFhirServers(skip, take);
+    const request = await getAllFhirServers();
     return res.status(request.status).json(request);
   }
 );
