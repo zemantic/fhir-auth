@@ -11,6 +11,7 @@ import { fhirRoutes } from "./routes/fhir";
 import { fhirServerRoutes } from "./routes/fhirServer";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import path from 'path';
 
 dotenv.config();
 
@@ -75,8 +76,12 @@ app.use("/fhir", fhirRoutes);
 app.use("/user", apiRateLimit);
 app.use("/user", userRoutes);
 
+// set assets folder to serve ui assets
+app.use('/assets', express.static(path.join(__dirname , 'fhir-auth-ui/assets/')))
+// load front-end in base route
 app.get("/", (req, res) => {
-  return res.status(200).json({ msg: `FhIR Auth Server` });
+  res.sendFile(path.join(__dirname, 'fhir-auth-ui/index.html'));
+  // return res.status(200).json({ msg: `FhIR Auth Server` });
 });
 
 app.listen(port, () => {
