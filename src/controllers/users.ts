@@ -86,6 +86,7 @@ export const createUser = async (
     responseObject.status = 500;
     responseObject.data = error;
     responseObject.message = `an unexpected error occured`;
+    return responseObject;
   }
 };
 
