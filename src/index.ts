@@ -66,25 +66,55 @@ app.use(express.text({ type: "application/fhir+xml" }));
 // load routes
 app.use(wellKnownRoute);
 app.use(keysRoute);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/oauth`, fhirRateLimit);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/oauth`, oauthRoutes);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/api`, apiRateLimit);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/api`, clientRoutes);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/api`, resourceRoutes);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/api`, fhirServerRoutes);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/fhir`, fhirRateLimit);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/fhir`, fhirRoutes);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/user`, apiRateLimit);
-app.use(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }/user`, userRoutes);
-
-
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/oauth`,
+  fhirRateLimit
+);
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/oauth`,
+  oauthRoutes
+);
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/api`,
+  apiRateLimit
+);
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/api`,
+  clientRoutes
+);
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/api`,
+  resourceRoutes
+);
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/api`,
+  fhirServerRoutes
+);
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/fhir`,
+  fhirRateLimit
+);
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/fhir`,
+  fhirRoutes
+);
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/user`,
+  apiRateLimit
+);
+app.use(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/user`,
+  userRoutes
+);
 
 // load front-end in base route
-app.get(`${process.env.BASE_URL_PATH ?? "/" + process.env.BASE_URL_PATH }`, (req, res) => {
-  // res.sendFile(path.join(__dirname, "fhir-auth-ui/index.html"));
-  return res.status(200).json({ msg: `FhIR Auth Server` });
-});
-
+app.get(
+  `${process.env.BASE_URL_PATH ? "/" + process.env.BASE_URL_PATH : ""}/`,
+  (req, res) => {
+    // res.sendFile(path.join(__dirname, "fhir-auth-ui/index.html"));
+    return res.status(200).json({ msg: `FhIR Auth Server` });
+  }
+);
 
 app.listen(port, () => {
   console.log(`FHIR Auth Server Running @ ${port}`);
