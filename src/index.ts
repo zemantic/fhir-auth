@@ -83,7 +83,7 @@ app.use(
 );
 
 // load front-end in base route
-app.get("/", (req, res) => {
+app.get(`${process.env.BASE_URL_PATH}/`, (req, res) => {
   res.sendFile(path.join(__dirname, "fhir-auth-ui/index.html"));
   // return res.status(200).json({ msg: `FhIR Auth Server` });
 });
